@@ -18,6 +18,7 @@ from geoforms.models import RadioElementModel
 from geoforms.models import TextElementModel
 from geoforms.models import TextareaModel
 from geoforms.models import RangeElementModel
+from geoforms.models import MapLayerModel
 from geoforms.widgets import CheckboxElement
 from geoforms.widgets import ColorInput
 from geoforms.widgets import Drawbutton
@@ -28,6 +29,7 @@ from geoforms.widgets import TextElement
 from geoforms.widgets import TextareaElement
 from geoforms.widgets import TranslationWidget
 from geoforms.widgets import RangeElement
+from geoforms.widgets import MapLayer
 
 #element admin forms
 class ElementForm(forms.ModelForm):
@@ -92,7 +94,17 @@ class ElementForm(forms.ModelForm):
         render the element
         """
         return ''
+
+class MapLayerForm(ElementForm):
+
+    def render(self, name, html):
+        return MapLayer().render(name, html)
     
+    class Meta:
+        model = MapLayerModel
+        fields = [ 'name', 'html']
+
+
 class TextElementForm(ElementForm):
     """
     This modelform is used in the admin to

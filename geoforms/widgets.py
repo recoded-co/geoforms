@@ -17,6 +17,12 @@ from geonition_utils.widgets import Checkbox
 #smidgets with basic html
 
 #questionnaire widgets
+class MapLayer(Widget):
+    
+    def render(self, name, html):
+        # do we need name? label for hidden field?
+        return "<script> map.add_gml('%s'); </script>" % (html)
+
 class Drawbutton(Widget):
     """
     This is a html button

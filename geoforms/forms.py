@@ -46,7 +46,7 @@ class ElementForm(forms.ModelForm):
         html and sets the correct initial
         values for the form.
         """
-        
+        print 'super %s ' % str(kwargs)
         super(ElementForm, self).__init__(*args, **kwargs)
  
         # Set the form fields based on the model object
@@ -58,7 +58,7 @@ class ElementForm(forms.ModelForm):
                 initial_values.append(soup.label.text)
             
             self.initial['question'] = initial_values
-    
+        
     def save(self, commit=True):
         """
         This function saves the elements
@@ -94,15 +94,56 @@ class ElementForm(forms.ModelForm):
         render the element
         """
         return ''
-
-class MapLayerForm(ElementForm):
-
-    def render(self, name, html):
-        return MapLayer().render(name, html)
     
+#class MapChoiceField(forms.ModelChoiceField):
+#    def label_from_instance(self, obj):
+#        return "%i layer" % obj.name
+    
+from gmlupload.models import MapFileUpload
+class MapLayerForm(ElementForm):
+    
+    question = forms.CharField(widget=forms.widgets.Select())
+    
+    def __init__(self, *args, **kwargs):
+        super(MapLayerForm, self).__init__(*args, **kwargs)
+        
+        if self.initial and 'question' in self.initial:
+            self.initial['question'] = self.initial['question'][0]
+
+        queryset=MapFileUpload.objects.all()
+        choices = [(x.file.name, x.name) for x in queryset]
+        self.fields['question'].widget.choices = choices
+        
+    def render(self, question, name, html):
+        return MapLayer().render(question, name)
+    
+    def clean_question(self):
+        html = self.cleaned_data['question']
+        return [html for x in settings.LANGUAGES] # SotfGIS Hack!
+    
+    def save(self, commit=True): # SoftGIS Hack!
+        model = super(MapLayerForm, self).save(commit=False)
+
+        if self.is_valid():
+            name = self.cleaned_data['name'][:200]
+            if ' ' in name:
+                name = name.replace(' ', '-')
+                    
+            for i, lang in enumerate(settings.LANGUAGES):
+                gen_html = '<label>%s</label>' % self.cleaned_data['question'][i]
+                setattr(model, 'html_%s' % lang[0], gen_html)
+                setattr(model, 'name_%s' % lang[0], name) # all langages should have the same name
+            
+        # Save the fields
+        if commit:
+            model.save()
+            
+        return model
+
     class Meta:
         model = MapLayerModel
-        fields = [ 'name', 'html']
+        #exclude = ['element_type', 'html']
+        fields = [ 'question', 'name' ]
 
 
 class TextElementForm(ElementForm):

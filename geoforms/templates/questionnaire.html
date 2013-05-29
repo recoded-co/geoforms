@@ -35,7 +35,17 @@
                     {% if key == form.slug %}
                         {% for element in value %}
                         <div class="form_element" data-element-type="{{element.element_type}}">
-                            {{ element.html|safe }}
+                           
+                           {% if element.element_type == 'map' %}
+                           {% load staticfiles %}
+                           		{{ element.html|safe }}
+                           		<script>
+	                           		var MapLayerList = [{'file_path': 'http://localhost:8000/static/gmlupload/parki_lasy_poznan_2000.gml', 'color':'red'}];
+	                           	</script>
+                           {% else %}
+                           		{{ element.html|safe }}
+                           {% endif %}
+                           
                         </div>
                         {% endfor %}
                     {% endif %}
@@ -225,11 +235,31 @@ jQuery(document).ready(function() {
                 layer : layer
                 });
             map.addLayer(layer);
+            
         /* end WMS element handling */
         });
         makeWMSLayerSwitcher(1);
     });
 });
+
+if(typeof MapLayerList != 'undefined'){
+      	for( x in MapLayerList){
+      		alert(MapLayerList[x]['file_path'] + '  ' + MapLayerList[x]['color']);
+      		//var layer = new OpenLayers.Layer.GML("GML", MapLayerList[x]['file_path']);
+      		//map.addLayer(layer);
+      		
+      		
+      		var layer = new OpenLayers.Layer.Vector("GML", {
+			    strategies: [new OpenLayers.Strategy.Fixed()],
+			    protocol: new OpenLayers.Protocol.HTTP({
+			        url: MapLayerList[x]['file_path'],
+			        format: new OpenLayers.Format.GML(),
+			    }),
+			
+			});
+      		map.addLayer(layer);
+      	}
+}
 
 {% endblock questionnaire_init %}
 function accordionPageChangeHandler(event) {

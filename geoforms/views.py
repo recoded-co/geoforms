@@ -9,6 +9,9 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from datetime import date
 from geonition_utils.http import HttpResponse
 from django.utils.translation import ugettext as _
+from django.conf import settings
+from django.contrib.sites.models import Site
+
 
 
 @ensure_csrf_cookie
@@ -20,14 +23,22 @@ def questionnaire(request, questionnaire_slug, template=''):
     quest = Questionnaire.on_site.select_related().get(slug = questionnaire_slug)
 
     form_list = quest.geoforms.all().order_by('questionnaireform__order')
+    print form_list
     elements = {}
     popup_set = set(Geoform.objects.filter(page_type = 'popup').values_list('slug', flat=True))
     bigcontent_forms = set()
     for form in form_list:
         popup_elements = form.elements.filter(element_type = 'drawbutton').values_list('html', flat=True)
+        
+        popup_elements_map = form.elements.filter(element_type = 'map').values_list('html', flat=True)
+        
         wms_elements = form.elements.filter(element_type = 'wms-layer')
 
         if len(popup_elements) == 0 and len(wms_elements) == 0:
+            bigcontent_forms.add(form.name)
+
+        # bigcontent_forms jest to lista dla ktorej wyswietlany jest na frontpagu big content - bez mapy
+        if len(popup_elements_map) == 0 and len(wms_elements) == 0:
             bigcontent_forms.add(form.name)
 
         for e in popup_elements:
@@ -51,8 +62,22 @@ def questionnaire(request, questionnaire_slug, template=''):
                               'bigcontent_forms': bigcontent_forms,
                               'elements': elements,
                               'questionnaire': quest,
-                              'map_slug': 'questionnaire-map'},
-                             context_instance = RequestContext(request))
+                              'map_slug': 'questionnaire-map',
+                              'settings': settings,
+                              'current_site' : current_site(request)},
+                              context_instance = RequestContext(request))
+
+def current_site(request):
+    """
+    A context processor to add the "current site" to the current Context
+    """
+    try:
+        current_site = Site.objects.get_current()
+        return current_site
+    except Site.DoesNotExist:
+        # always return a dict, no matter what!
+        return '' # an empty string
+
 
 def get_active_questionnaires(request):
     today = date.today()

@@ -34,11 +34,9 @@ def questionnaire(request, questionnaire_slug, template=''):
         
         wms_elements = form.elements.filter(element_type = 'wms-layer')
 
-        if len(popup_elements) == 0 and len(wms_elements) == 0:
-            bigcontent_forms.add(form.name)
-
         # bigcontent_forms jest to lista dla ktorej wyswietlany jest na frontpagu big content - bez mapy
-        if len(popup_elements_map) == 0 and len(wms_elements) == 0:
+        if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) ==0 :
+            print "form name" + str(form.name)
             bigcontent_forms.add(form.name)
 
         for e in popup_elements:

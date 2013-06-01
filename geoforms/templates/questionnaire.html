@@ -41,8 +41,9 @@
                            		<script>
                            			var path = '{{ element.html|safe }}';
                            			path = path.replace("<label>","");
-                           			path = path.replace("</label>","");
-	                           		var MapLayerList = [{'file_path': '{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':'red'}];
+                           			var color = path.split("</label>")[1];
+                           			path = path.split("</label>")[0];
+	                           		var MapLayerList = [{'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':color}];
 	                           	</script>
                            {% else %}
                            		{{ element.html|safe }}

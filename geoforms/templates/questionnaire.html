@@ -39,10 +39,11 @@
                            {% if element.element_type == 'map' %}
                                              
                            		<script>
-                           			var path = '{{ element.html|safe }}';
-                           			path = path.replace("<label>","");
-                           			var color = path.split("</label>")[1];
-                           			path = path.split("</label>")[0];
+                           			var element = '{{ element.html|safe }}';
+                           			element = element.replace("<label>","");
+                           			element = element.replace("</label>","");
+                           			var path = element.split("?")[0];
+                           			var color = element.split("?")[1];
 	                           		var MapLayerList = [{'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':color}];
 	                           	</script>
                            {% else %}

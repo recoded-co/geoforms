@@ -44,7 +44,9 @@
                            			element = element.replace("</label>","");
                            			var path = element.split("?")[0];
                            			var color = element.split("?")[1];
-	                           		var MapLayerList = [{'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':color}];
+                           			var popup = element.split("?")[2];
+	                           		var MapLayerList = [{'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':color, 'popup':popup}];
+	                          
 	                           	</script>
                            {% else %}
                            		{{ element.html|safe }}
@@ -242,6 +244,115 @@ jQuery(document).ready(function() {
             
         /* end WMS element handling */
         });
+        
+        // w MapLayerList znajduje się lista z elementami do wyświetlenia na mapie
+		if(typeof MapLayerList != 'undefined'){
+			for( x in MapLayerList){
+	      		
+	      		/*function onPopupClose(evt) {
+		            selectControl.unselect(selectedFeature);
+		        }
+	      		
+	      		function onFeatureSelect(feature) {
+	      			alert('onFeatureSelect');
+		            selectedFeature = feature;
+		            popup = new OpenLayers.Popup.FramedCloud("chicken", 
+		                                     feature.geometry.getBounds().getCenterLonLat(),
+		                                     null,
+		                                     "<div style='font-size:.8em'>Feature: " + feature.id +"<br>Area: " + feature.geometry.getArea()+"</div>",
+		                                     null, true, onPopupClose);
+		            feature.popup = popup;
+		            map.addPopup(popup);
+		        }
+	      		function onFeatureUnselect(feature) {
+	      			alert('onFeatureUnselect');
+		            map.removePopup(feature.popup);
+		            feature.popup.destroy();
+		            feature.popup = null;
+		        } */
+		        
+	      		var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults(
+			        {fillColor: MapLayerList[x]['color'], fillOpacity: 0.2, strokeColor: MapLayerList[x]['color']},
+			        OpenLayers.Feature.Vector.style["default"]));
+	      		
+	      		var polygonLayer = new OpenLayers.Layer.Vector("GML", {
+	                protocol: new OpenLayers.Protocol.HTTP({
+	                    url: MapLayerList[x]['file_path'],
+	                    format: new OpenLayers.Format.GML()                    
+	                }),
+	                styleMap: styleMap,
+	                strategies: [new OpenLayers.Strategy.Fixed()]
+	            });
+	      		
+	      		//selectControl = new OpenLayers.Control.SelectFeature(polygonLayer,
+                //{onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
+	      		
+	      		map.addLayer(polygonLayer);
+	      		
+	      		var polygonControl = new OpenLayers.Control.DrawFeature(polygonLayer,
+                                    OpenLayers.Handler.Polygon,
+                                    {'id': 'mapcontrol',
+                                    //'featureAdded': gnt.questionnaire.feature_added_map
+                                   });
+                                    
+                //select feature control
+		        var select_feature_control_new = new OpenLayers.Control.SelectFeature(
+		                [polygonLayer],
+		                {
+		                id: 'selectcontrol',
+		                onSelect: function(evt){
+		                		
+		                		var popup_name = MapLayerList[x]['popup'];
+		                		var name = MapLayerList[x]['file_path'];
+							    var popupcontent = " default info content ";
+							
+							    //get the right content for the popup
+							    if( popup_name !== undefined ) {
+							        popupcontent = $('#' + popup_name).html();
+							    }
+		                		
+							    evt.lonlat = new OpenLayers.LonLat(
+									               			evt.geometry.bounds.left,
+									                        evt.geometry.bounds.bottom);
+								evt.popupClass = OpenLayers.Popup.FramedCloud;
+							    evt.data = {
+							        'contentHTML': popupcontent
+							    };
+							    evt.attributes.name = name;
+							
+							    //the createPopup function did not seem to work so here
+							    evt.popup = new OpenLayers.Popup.FramedCloud(
+							                        evt.id,
+							                        evt.lonlat,
+							                        new OpenLayers.Size(100,100),
+							                        evt.data.contentHTML,
+							                        null,
+							                        false,
+							                        undefined);
+							        
+							    gnt.questionnaire.show_popup_for_feature(evt, popup_name);
+							    evt.layer.redraw();
+					    
+		                },
+		                onUnselect: gnt.questionnaire.on_feature_unselect_handler,
+		                toggle: false,
+		                clickout: true,
+		                multiple: false,
+		                hover: false
+		                });
+
+		        map.addControls([select_feature_control_new,
+		                         polygonControl,
+		                         ]);              
+		        select_feature_control_new.activate();     
+                
+	      		//map.addControl(new OpenLayers.Control.LayerSwitcher());
+	      		//map.addControl(new OpenLayers.Control.MousePosition());
+	      		//map.addControl(selectControl);
+	      		//selectControl.activate();
+	      	}
+		}	
+	
         makeWMSLayerSwitcher(1);
     });
 });

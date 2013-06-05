@@ -107,10 +107,16 @@ class MapLayerForm(ElementForm):
                             widget = ColorInput,
                             label = _('color'),
                             help_text = _('The color of the feature to be drawn. The color is given as hexadecimal color e.g. #ffffff --> white, #000000 --> black, #ff0000 --> red, #00ff00 --> green, #0000ff --> blue.'))
-    
+    popup = forms.ChoiceField(choices = (('',''),),
+                              label = _('popup for the place, route or area'),
+                              help_text = _('Choose the popup to use for the place, route, or area.'))
     
     def __init__(self, *args, **kwargs):
         super(MapLayerForm, self).__init__(*args, **kwargs)
+        
+        self.fields['popup'] = forms.ChoiceField(
+            choices = Geoform.objects.filter(page_type = 'popup').values_list('slug', 'name'),
+            help_text = _('Choose the popup to use for the place, route, or area.'))
         
         print "MapLayerForm __init__"
         
@@ -121,12 +127,18 @@ class MapLayerForm(ElementForm):
                     lang_html = getattr(kwargs['instance'],
                                         'html_%s' % lang[0])
                     soup = BeautifulSoup(lang_html)
+                    
+                    if len(soup.label.string.split('?'))>2 :
+                        popup = soup.label.string.split('?')[2]
+                        if len(popup) != 0 :
+                            self.initial['popup'] = popup
                     color = soup.label.string.split('?')[1]
                     question = soup.label.string.split('?')[0]
                     if len(color) !=0:
                         self.initial['color'] = soup.label.string.split('?')[1]
                     if len(question) !=0 :
                         self.initial['question'] = question
+                    
                         
         queryset=MapFileUpload.objects.all()
         choices = [(x.file.name, x.name) for x in queryset]
@@ -153,9 +165,11 @@ class MapLayerForm(ElementForm):
             name = self.cleaned_data['name'][:200]
             if ' ' in name:
                 name = name.replace(' ', '-')
-                    
+            
+            popup = self.cleaned_data['popup']
+              
             for i, lang in enumerate(settings.LANGUAGES):
-                gen_html = '<label>%s?%s</label>' % (self.cleaned_data['question'][i],self.cleaned_data['color'])
+                gen_html = '<label>%s?%s?%s</label>' % (self.cleaned_data['question'][i],self.cleaned_data['color'],self.cleaned_data['popup'])
                 print "MapLayerForm save gen_html: "+gen_html
                 setattr(model, 'html_%s' % lang[0], gen_html)
                 setattr(model, 'name_%s' % lang[0], name) # all langages should have the same name

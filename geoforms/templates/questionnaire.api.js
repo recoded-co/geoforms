@@ -199,7 +199,7 @@ active_class: the class to use when a button is activated
                 var drawcontrol = map.getControl(drawcontrol_id);
                 drawcontrol.deactivate();
                 var selectcontrol_id = this.options['selectcontrol'];
-                var selectcontrol = map.getControl(selectcontrol_id);
+                var selectcontrol = map.getControl(selectcontrol_fupid);
                 selectcontrol.activate();
 
                 //TOOLTIP
@@ -223,7 +223,6 @@ on where to show a popup for each feature.
 */
 gnt.questionnaire.get_popup_lonlat = function(geometry) {
     var lonlat;
-
     if ( geometry.id.search( "Point" ) !== -1) {
         lonlat = new OpenLayers.LonLat(
                         geometry.x,
@@ -373,8 +372,8 @@ that can be called.
 */
 gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
 
-    if ( feature.popup !== undefined ) {
-
+	if ( feature.popup !== undefined ) {
+    
         if( popup_name === undefined ) {
             popup_name = $('.drawbutton[name=' +
                            feature.attributes.name +
@@ -385,7 +384,6 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
             map.removePopup( gnt.questionnaire.popup );
             gnt.questionnaire.popup = undefined;
         }
-
         //create popup and put it on the map
         gnt.questionnaire.popup = feature.popup;
         map.addPopup(gnt.questionnaire.popup);
@@ -442,7 +440,6 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
         return true;
 
     } else {
-
         return false;
 
     }
@@ -458,7 +455,6 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
  to be shown as the content in popup.
 */
 gnt.questionnaire.feature_added = function(evt) {
-
     //get the right lonlat for the popup position
     evt.lonlat = gnt.questionnaire.get_popup_lonlat(evt.geometry);
 

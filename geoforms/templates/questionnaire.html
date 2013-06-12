@@ -23,7 +23,9 @@
         </h3>
     </li>
 </ul>
-
+<script type="text/javascript" charset="utf-8">
+var MapLayerList = new Array();	
+</script>
 <div id="forms">
     {% for form in form_list %}
         <h3 id="page_{{ forloop.counter }}" class="page_{{ forloop.counter }} {% if form.name in bigcontent_forms %}bigcontent{% else %}smallcontent{% endif %}">
@@ -45,8 +47,12 @@
                            			var path = element.split("?")[0];
                            			var color = element.split("?")[1];
                            			var popup = element.split("?")[2];
-	                           		var MapLayerList = [{'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 'color':color, 'popup':popup}];
-	                          
+	                           		MapLayerList.push({	'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 
+	                           											'color':color, 
+	                           											'popup':popup, 
+	                           											'form_name':'{{ forloop.counter}}', 
+	                           											'form_length':'{{ form_list|length|add:1 }}'
+	                           										});
 	                           	</script>
                            {% else %}
                            		{{ element.html|safe }}
@@ -139,6 +145,8 @@
 <script type="text/javascript" src="{% url api_javascript %}"></script>
 <script type="text/javascript" src="{% url map_js map_slug_name=map_slug %}"></script>
 <script type="text/javascript">
+
+var map_layer_group = [];
 var data_group = 'Q-{{ questionnaire.slug }}';
 var questionnaire_area = {{ questionnaire.area.json|safe }};
 // add crs to area
@@ -248,29 +256,7 @@ jQuery(document).ready(function() {
         // w MapLayerList znajduje się lista z elementami do wyświetlenia na mapie
 		if(typeof MapLayerList != 'undefined'){
 			for( x in MapLayerList){
-	      		
-	      		/*function onPopupClose(evt) {
-		            selectControl.unselect(selectedFeature);
-		        }
-	      		
-	      		function onFeatureSelect(feature) {
-	      			alert('onFeatureSelect');
-		            selectedFeature = feature;
-		            popup = new OpenLayers.Popup.FramedCloud("chicken", 
-		                                     feature.geometry.getBounds().getCenterLonLat(),
-		                                     null,
-		                                     "<div style='font-size:.8em'>Feature: " + feature.id +"<br>Area: " + feature.geometry.getArea()+"</div>",
-		                                     null, true, onPopupClose);
-		            feature.popup = popup;
-		            map.addPopup(popup);
-		        }
-	      		function onFeatureUnselect(feature) {
-	      			alert('onFeatureUnselect');
-		            map.removePopup(feature.popup);
-		            feature.popup.destroy();
-		            feature.popup = null;
-		        } */
-		        
+	      		console.log('---------------------------'+ x);
 	      		var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults(
 			        {fillColor: MapLayerList[x]['color'], fillOpacity: 0.2, strokeColor: MapLayerList[x]['color']},
 			        OpenLayers.Feature.Vector.style["default"]));
@@ -283,11 +269,12 @@ jQuery(document).ready(function() {
 	                styleMap: styleMap,
 	                strategies: [new OpenLayers.Strategy.Fixed()]
 	            });
-	      		
-	      		//selectControl = new OpenLayers.Control.SelectFeature(polygonLayer,
-                //{onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
+	            
+	            // new parameter holds form name for viewing on specific page
+	      		polygonLayer.form_name = MapLayerList[x]['form_name']
 	      		
 	      		map.addLayer(polygonLayer);
+	      		map_layer_group.push(polygonLayer);
 	      		
 	      		var polygonControl = new OpenLayers.Control.DrawFeature(polygonLayer,
                                     OpenLayers.Handler.Polygon,
@@ -303,12 +290,13 @@ jQuery(document).ready(function() {
 		                onSelect: function(evt){
 		                		
 		                		var popup_name = MapLayerList[x]['popup'];
-		                		var name = MapLayerList[x]['file_path'];
+		                		//var name = MapLayerList[x]['file_path'];
 							    var popupcontent = " default info content ";
 							
 							    //get the right content for the popup
 							    if( popup_name !== undefined ) {
-							        popupcontent = $('#' + popup_name).html();
+							        var content = $('#' + popup_name).html().split('<div class="popup_feature_buttons">')[0];
+							        popupcontent = content;
 							    }
 		                		
 							    evt.lonlat = new OpenLayers.LonLat(
@@ -318,7 +306,8 @@ jQuery(document).ready(function() {
 							    evt.data = {
 							        'contentHTML': popupcontent
 							    };
-							    evt.attributes.name = name;
+							    
+							    //evt.attributes.name = name;
 							
 							    //the createPopup function did not seem to work so here
 							    evt.popup = new OpenLayers.Popup.FramedCloud(
@@ -330,7 +319,7 @@ jQuery(document).ready(function() {
 							                        false,
 							                        undefined);
 							        
-							    gnt.questionnaire.show_popup_for_feature(evt, popup_name);
+							    gnt.questionnaire.show_popup_for_feature(evt, popup_name, 'noButtons');
 							    evt.layer.redraw();
 					    
 		                },
@@ -340,20 +329,80 @@ jQuery(document).ready(function() {
 		                multiple: false,
 		                hover: false
 		                });
+		        
+		        var report = function(e) {
+	               	console.log(" ->> " + e.type + " ---  " + e.feature.id + "  -- ");
+	            };
+		        
+		        var highlightCtrl = new OpenLayers.Control.SelectFeature(polygonLayer, {
+	                hover: true,
+	                highlightOnly: true,
+	                renderIntent: "temporary",
+	                eventListeners: {
+	                    featurehighlighted: function(evt){
+	                    	if( typeof (gnt.questionnaire.popup_hint) != 'undefined'){
+		                		map.removePopup(gnt.questionnaire.popup_hint);
+	    						gnt.questionnaire.popup_hint = undefined;
+		                	}
+								popup = new OpenLayers.Popup.FramedCloud("chicken",
+										evt.feature.geometry.getBounds().getCenterLonLat(),
+								        new OpenLayers.Size(100,100),
+								        evt.feature.attributes.name,
+								        null, true, function(evt) {
+								            console.log("  onClose  ");
+								            evt.unselectAll();
+								        });
+								gnt.questionnaire.popup_hint = popup;
+								map.addPopup(gnt.questionnaire.popup_hint);
+	                    },
+	                    featureunhighlighted: function(evt){
+	                    	map.removePopup(gnt.questionnaire.popup_hint);
+    						gnt.questionnaire.popup_hint = undefined;
+	                    },
+	                }
+	            });
 
 		        map.addControls([select_feature_control_new,
-		                         polygonControl,
-		                         ]);              
-		        select_feature_control_new.activate();     
-                
-	      		//map.addControl(new OpenLayers.Control.LayerSwitcher());
-	      		//map.addControl(new OpenLayers.Control.MousePosition());
-	      		//map.addControl(selectControl);
-	      		//selectControl.activate();
+		                         //polygonControl,
+		                         highlightCtrl
+		                         ]);  
+		        highlightCtrl.activate();            
+		        select_feature_control_new.activate();   
 	      	}
 		}	
 	
         makeWMSLayerSwitcher(1);
+    });
+    $('.previous').on('click',function(e,data){
+    	var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
+    	if (current_page_name === undefined){
+        	current_page_name = parseInt(MapLayerList[0]['form_length']);
+        }
+    	var temp  = parseInt(current_page_name)-1;
+    	console.log("priv :"+temp + "   p_on:"+current_page_name);
+    		for( x in map_layer_group){
+    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			if( map_layer_group[x].form_name == temp ) {
+    				map_layer_group[x].setVisibility(true);
+    			} else {
+    				map_layer_group[x].setVisibility(false);
+    			}
+    		}
+    	});
+    $('.next').on('click',function(e,data){
+        var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
+        if (current_page_name === undefined){
+        	current_page_name = parseInt(MapLayerList[0]['form_length']);
+        }
+        var temp  = parseInt(current_page_name)+1;
+    		for( x in map_layer_group){
+    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			if( map_layer_group[x].form_name == temp ) {
+    				map_layer_group[x].setVisibility(true);
+    			} else {
+    				map_layer_group[x].setVisibility(false);
+    			}
+    		}
     });
 });
 

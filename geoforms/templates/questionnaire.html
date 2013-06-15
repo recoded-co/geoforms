@@ -44,14 +44,17 @@ var MapLayerList = new Array();
                            			var element = '{{ element.html|safe }}';
                            			element = element.replace("<label>","");
                            			element = element.replace("</label>","");
-                           			var path = element.split("?")[0];
-                           			var color = element.split("?")[1];
-                           			var popup = element.split("?")[2];
+                           			element_l = element.split("?");
+                           			var path = element_l[0];
+                           			var color = element_l[1];
+                           			var popup = element_l[2];
+                           			var name_param = element_l[3];
 	                           		MapLayerList.push({	'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 
 	                           											'color':color, 
 	                           											'popup':popup, 
 	                           											'form_name':'{{ forloop.counter}}', 
-	                           											'form_length':'{{ form_list|length|add:1 }}'
+	                           											'form_length':'{{ form_list|length|add:1 }}',
+	                           											'name_param': name_param
 	                           										});
 	                           	</script>
                            {% else %}
@@ -207,6 +210,7 @@ function count_results() {
 {% block questionnaire_init %}
 
 jQuery(document).ready(function() {
+	$('*').css('font-family','{{ org_settings.font|safe }}');
     gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given
@@ -256,7 +260,6 @@ jQuery(document).ready(function() {
         // w MapLayerList znajduje się lista z elementami do wyświetlenia na mapie
 		if(typeof MapLayerList != 'undefined'){
 			for( x in MapLayerList){
-	      		console.log('---------------------------'+ x);
 	      		var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults(
 			        {fillColor: MapLayerList[x]['color'], fillOpacity: 0.2, strokeColor: MapLayerList[x]['color']},
 			        OpenLayers.Feature.Vector.style["default"]));
@@ -330,10 +333,6 @@ jQuery(document).ready(function() {
 		                hover: false
 		                });
 		        
-		        var report = function(e) {
-	               	console.log(" ->> " + e.type + " ---  " + e.feature.id + "  -- ");
-	            };
-		        
 		        var highlightCtrl = new OpenLayers.Control.SelectFeature(polygonLayer, {
 	                hover: true,
 	                highlightOnly: true,
@@ -347,7 +346,7 @@ jQuery(document).ready(function() {
 								popup = new OpenLayers.Popup.FramedCloud("chicken",
 										evt.feature.geometry.getBounds().getCenterLonLat(),
 								        new OpenLayers.Size(100,100),
-								        evt.feature.attributes.name,
+								        evt.feature.attributes[''+MapLayerList[x]['name_param']],
 								        null, true, function(evt) {
 								            console.log("  onClose  ");
 								            evt.unselectAll();

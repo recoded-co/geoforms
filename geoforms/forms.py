@@ -103,36 +103,80 @@ from gmlupload.models import MapFileUpload
 class MapLayerForm(ElementForm):
     
     question = forms.CharField(widget=forms.widgets.Select())
+    color = forms.CharField(max_length = 7,
+                            widget = ColorInput,
+                            label = _('color'),
+                            help_text = _('The color of the feature to be drawn. The color is given as hexadecimal color e.g. #ffffff --> white, #000000 --> black, #ff0000 --> red, #00ff00 --> green, #0000ff --> blue.'))
+    popup = forms.ChoiceField(choices = (('',''),),
+                              label = _('popup for the place, route or area'),
+                              help_text = _('Choose the popup to use for the place, route, or area.'))
+    name_param = forms.CharField(max_length = 7,
+                            widget = ColorInput,
+                            label = _('gml select parameter'),
+                            help_text = _('Wpisac podpis'))
+    
     
     def __init__(self, *args, **kwargs):
         super(MapLayerForm, self).__init__(*args, **kwargs)
         
+        self.fields['popup'] = forms.ChoiceField(
+            choices = Geoform.objects.filter(page_type = 'popup').values_list('slug', 'name'),
+            help_text = _('Choose the popup to use for the place, route, or area.'))
+        
+        print "MapLayerForm __init__"
+        
         if self.initial and 'question' in self.initial:
-            self.initial['question'] = self.initial['question'][0] #SoftGIS hack, translate field
-
+            if kwargs.has_key('instance'):
+                for lang in settings.LANGUAGES:
+                    lang_html = getattr(kwargs['instance'],
+                                        'html_%s' % lang[0])
+                    soup = BeautifulSoup(lang_html)
+                    
+                    if len(soup.label.string.split('?'))>3 :
+                        name_param = soup.label.string.split('?')[3]
+                        if len(name_param) != 0 :
+                            self.initial['name_param'] = name_param
+                    if len(soup.label.string.split('?'))>2 :
+                        popup = soup.label.string.split('?')[2]
+                        if len(popup) != 0 :
+                            self.initial['popup'] = popup
+                    color = soup.label.string.split('?')[1]
+                    question = soup.label.string.split('?')[0]
+                    if len(color) !=0:
+                        self.initial['color'] = soup.label.string.split('?')[1]
+                    if len(question) !=0 :
+                        self.initial['question'] = question
+                                            
         queryset=MapFileUpload.objects.all()
         choices = [(x.file.name, x.name) for x in queryset]
         self.fields['question'].widget.choices = choices
     
     # map = property(set, get)
         
+        
     def render(self, question, name, html):
+        print "MapLayerForm render"
         return MapLayer().render(question, name)
     
     def clean_question(self):
-        question = self.cleaned_data['question']
-        return [question for x in settings.LANGUAGES] # SotfGIS Hack!
+        html = self.cleaned_data['question']
+        return [html for x in settings.LANGUAGES] # SotfGIS Hack!
     
     def save(self, commit=True): # SoftGIS Hack!
         model = super(MapLayerForm, self).save(commit=False)
-
+        
+        print "MapLayerForm save "
+        
         if self.is_valid():
             name = self.cleaned_data['name'][:200]
             if ' ' in name:
                 name = name.replace(' ', '-')
-                    
+            
+            popup = self.cleaned_data['popup']
+              
             for i, lang in enumerate(settings.LANGUAGES):
-                gen_html = '<label>%s</label>' % self.cleaned_data['question'][i]
+                gen_html = '<label>%s?%s?%s?%s</label>' % (self.cleaned_data['question'][i],self.cleaned_data['color'],self.cleaned_data['popup'],self.cleaned_data['name_param'])
+                print "MapLayerForm save gen_html: "+gen_html
                 setattr(model, 'html_%s' % lang[0], gen_html)
                 setattr(model, 'name_%s' % lang[0], name) # all langages should have the same name
 

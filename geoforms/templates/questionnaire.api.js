@@ -199,7 +199,7 @@ active_class: the class to use when a button is activated
                 var drawcontrol = map.getControl(drawcontrol_id);
                 drawcontrol.deactivate();
                 var selectcontrol_id = this.options['selectcontrol'];
-                var selectcontrol = map.getControl(selectcontrol_id);
+                var selectcontrol = map.getControl(selectcontrol_fupid);
                 selectcontrol.activate();
 
                 //TOOLTIP
@@ -223,7 +223,6 @@ on where to show a popup for each feature.
 */
 gnt.questionnaire.get_popup_lonlat = function(geometry) {
     var lonlat;
-
     if ( geometry.id.search( "Point" ) !== -1) {
         lonlat = new OpenLayers.LonLat(
                         geometry.x,
@@ -371,10 +370,10 @@ This function makes the popup and shows it for the feature given.
 Expects there to be a feature.popup created
 that can be called.
 */
-gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
+gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons_behave) {
 
-    if ( feature.popup !== undefined ) {
-
+	if ( feature.popup !== undefined ) {
+    
         if( popup_name === undefined ) {
             popup_name = $('.drawbutton[name=' +
                            feature.attributes.name +
@@ -385,10 +384,16 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
             map.removePopup( gnt.questionnaire.popup );
             gnt.questionnaire.popup = undefined;
         }
-
+        
+        if( gnt.questionnaire.popup_hint !== undefined ){
+        	map.removePopup( gnt.questionnaire.popup_hint );
+            gnt.questionnaire.popup_hint = undefined;
+        }
+        
         //create popup and put it on the map
-        gnt.questionnaire.popup = feature.popup;
-        map.addPopup(gnt.questionnaire.popup);
+      	
+      	gnt.questionnaire.popup = feature.popup;
+      	map.addPopup(gnt.questionnaire.popup);
         //map.addPopup(gnt.questionnaire.popup);
 
         //add a class to the form to recognize it as active
@@ -411,7 +416,7 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
 
             for(var i = 0; i < feature.attributes.form_values.length; i++) {
                 var val_obj = feature.attributes.form_values[i];
-
+				console.log("-->> "+$(this).attr('type'));
                 if($(this).attr('name') === val_obj.name) {
 
                     //this shuold be done for all kinds of multiple value inputs
@@ -433,16 +438,14 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
         gnt.questionnaire.create_widgets('.popupform.active');
         gnt.questionnaire.popup.updateSize();
 
-        //connect the event to the infowindow buttons
-        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
-                                                               gnt.questionnaire.save_handler);
-        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.remove').click([feature],
-                                                                 gnt.questionnaire.remove_handler);
-
+	        //connect the event to the infowindow buttons
+	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
+	                                                               gnt.questionnaire.save_handler);
+	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.remove').click([feature],
+	                                                                 gnt.questionnaire.remove_handler);
         return true;
 
     } else {
-
         return false;
 
     }
@@ -458,7 +461,6 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name) {
  to be shown as the content in popup.
 */
 gnt.questionnaire.feature_added = function(evt) {
-
     //get the right lonlat for the popup position
     evt.lonlat = gnt.questionnaire.get_popup_lonlat(evt.geometry);
 
@@ -477,7 +479,6 @@ gnt.questionnaire.feature_added = function(evt) {
         'contentHTML': popupcontent
     };
     evt.attributes.name = name;
-
     //the createPopup function did not seem to work so here
     evt.popup = new OpenLayers.Popup.FramedCloud(
                         evt.id,

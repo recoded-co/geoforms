@@ -23,7 +23,9 @@
         </h3>
     </li>
 </ul>
-
+<script type="text/javascript" charset="utf-8">
+var MapLayerList = new Array();	
+</script>
 <div id="forms">
     {% for form in form_list %}
         <h3 id="page_{{ forloop.counter }}" class="page_{{ forloop.counter }} {% if form.name in bigcontent_forms %}bigcontent{% else %}smallcontent{% endif %}">
@@ -35,7 +37,30 @@
                     {% if key == form.slug %}
                         {% for element in value %}
                         <div class="form_element" data-element-type="{{element.element_type}}">
-                            {{ element.html|safe }}
+                           
+                           {% if element.element_type == 'map' %}
+                                             
+                           		<script>
+                           			var element = '{{ element.html|safe }}';
+                           			element = element.replace("<label>","");
+                           			element = element.replace("</label>","");
+                           			element_l = element.split("?");
+                           			var path = element_l[0];
+                           			var color = element_l[1];
+                           			var popup = element_l[2];
+                           			var name_param = element_l[3];
+	                           		MapLayerList.push({	'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 
+	                           											'color':color, 
+	                           											'popup':popup, 
+	                           											'form_name':'{{ forloop.counter}}', 
+	                           											'form_length':'{{ form_list|length|add:1 }}',
+	                           											'name_param': name_param
+	                           										});
+	                           	</script>
+                           {% else %}
+                           		{{ element.html|safe }}
+                           {% endif %}
+                           
                         </div>
                         {% endfor %}
                     {% endif %}
@@ -123,6 +148,8 @@
 <script type="text/javascript" src="{% url api_javascript %}"></script>
 <script type="text/javascript" src="{% url map_js map_slug_name=map_slug %}"></script>
 <script type="text/javascript">
+
+var map_layer_group = [];
 var data_group = 'Q-{{ questionnaire.slug }}';
 var questionnaire_area = {{ questionnaire.area.json|safe }};
 // add crs to area
@@ -183,6 +210,7 @@ function count_results() {
 {% block questionnaire_init %}
 
 jQuery(document).ready(function() {
+	$('*').css('font-family','{{ org_settings.font|safe }}');
     gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given
@@ -225,9 +253,155 @@ jQuery(document).ready(function() {
                 layer : layer
                 });
             map.addLayer(layer);
+            
         /* end WMS element handling */
         });
+        
+        // w MapLayerList znajduje się lista z elementami do wyświetlenia na mapie
+		if(typeof MapLayerList != 'undefined'){
+			for( x in MapLayerList){
+	      		var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults(
+			        {fillColor: MapLayerList[x]['color'], fillOpacity: 0.2, strokeColor: MapLayerList[x]['color']},
+			        OpenLayers.Feature.Vector.style["default"]));
+	      		
+	      		var polygonLayer = new OpenLayers.Layer.Vector("GML", {
+	                protocol: new OpenLayers.Protocol.HTTP({
+	                    url: MapLayerList[x]['file_path'],
+	                    format: new OpenLayers.Format.GML()                    
+	                }),
+	                styleMap: styleMap,
+	                strategies: [new OpenLayers.Strategy.Fixed()]
+	            });
+	            
+	            // new parameter holds form name for viewing on specific page
+	      		polygonLayer.form_name = MapLayerList[x]['form_name']
+	      		
+	      		map.addLayer(polygonLayer);
+	      		map_layer_group.push(polygonLayer);
+	      		
+	      		var polygonControl = new OpenLayers.Control.DrawFeature(polygonLayer,
+                                    OpenLayers.Handler.Polygon,
+                                    {'id': 'mapcontrol',
+                                    //'featureAdded': gnt.questionnaire.feature_added_map
+                                   });
+                                    
+                //select feature control
+		        var select_feature_control_new = new OpenLayers.Control.SelectFeature(
+		                [polygonLayer],
+		                {
+		                id: 'selectcontrol',
+		                onSelect: function(evt){
+		                		
+		                		var popup_name = MapLayerList[x]['popup'];
+		                		//var name = MapLayerList[x]['file_path'];
+							    var popupcontent = " default info content ";
+							
+							    //get the right content for the popup
+							    if( popup_name !== undefined ) {
+							        var content = $('#' + popup_name).html().split('<div class="popup_feature_buttons">')[0];
+							        popupcontent = content;
+							    }
+		                		
+							    evt.lonlat = new OpenLayers.LonLat(
+									               			evt.geometry.bounds.left,
+									                        evt.geometry.bounds.bottom);
+								evt.popupClass = OpenLayers.Popup.FramedCloud;
+							    evt.data = {
+							        'contentHTML': popupcontent
+							    };
+							    
+							    //evt.attributes.name = name;
+							
+							    //the createPopup function did not seem to work so here
+							    evt.popup = new OpenLayers.Popup.FramedCloud(
+							                        evt.id,
+							                        evt.lonlat,
+							                        new OpenLayers.Size(100,100),
+							                        evt.data.contentHTML,
+							                        null,
+							                        false,
+							                        undefined);
+							        
+							    gnt.questionnaire.show_popup_for_feature(evt, popup_name, 'noButtons');
+							    evt.layer.redraw();
+					    
+		                },
+		                onUnselect: gnt.questionnaire.on_feature_unselect_handler,
+		                toggle: false,
+		                clickout: true,
+		                multiple: false,
+		                hover: false
+		                });
+		        
+		        var highlightCtrl = new OpenLayers.Control.SelectFeature(polygonLayer, {
+	                hover: true,
+	                highlightOnly: true,
+	                renderIntent: "temporary",
+	                eventListeners: {
+	                    featurehighlighted: function(evt){
+	                    	if( typeof (gnt.questionnaire.popup_hint) != 'undefined'){
+		                		map.removePopup(gnt.questionnaire.popup_hint);
+	    						gnt.questionnaire.popup_hint = undefined;
+		                	}
+								popup = new OpenLayers.Popup.FramedCloud("chicken",
+										evt.feature.geometry.getBounds().getCenterLonLat(),
+								        new OpenLayers.Size(100,100),
+								        evt.feature.attributes[''+MapLayerList[x]['name_param']],
+								        null, true, function(evt) {
+								            console.log("  onClose  ");
+								            evt.unselectAll();
+								        });
+								gnt.questionnaire.popup_hint = popup;
+								map.addPopup(gnt.questionnaire.popup_hint);
+	                    },
+	                    featureunhighlighted: function(evt){
+	                    	map.removePopup(gnt.questionnaire.popup_hint);
+    						gnt.questionnaire.popup_hint = undefined;
+	                    },
+	                }
+	            });
+
+		        map.addControls([select_feature_control_new,
+		                         //polygonControl,
+		                         highlightCtrl
+		                         ]);  
+		        highlightCtrl.activate();            
+		        select_feature_control_new.activate();   
+	      	}
+		}	
+	
         makeWMSLayerSwitcher(1);
+    });
+    $('.previous').on('click',function(e,data){
+    	var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
+    	if (current_page_name === undefined){
+        	current_page_name = parseInt(MapLayerList[0]['form_length']);
+        }
+    	var temp  = parseInt(current_page_name)-1;
+    	console.log("priv :"+temp + "   p_on:"+current_page_name);
+    		for( x in map_layer_group){
+    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			if( map_layer_group[x].form_name == temp ) {
+    				map_layer_group[x].setVisibility(true);
+    			} else {
+    				map_layer_group[x].setVisibility(false);
+    			}
+    		}
+    	});
+    $('.next').on('click',function(e,data){
+        var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
+        if (current_page_name === undefined){
+        	current_page_name = parseInt(MapLayerList[0]['form_length']);
+        }
+        var temp  = parseInt(current_page_name)+1;
+    		for( x in map_layer_group){
+    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			if( map_layer_group[x].form_name == temp ) {
+    				map_layer_group[x].setVisibility(true);
+    			} else {
+    				map_layer_group[x].setVisibility(false);
+    			}
+    		}
     });
 });
 

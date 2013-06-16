@@ -23,7 +23,7 @@ class MapLayer(Widget):
         # do we need name? label for hidden field?
         # t = Template('templates/maplayertemplate.html
         # render t.render({'url':question})
-        return "<label>%s</label><script> aja ja aj alert('%s'); </script>" % (name, question)
+        return "<label>%s</label><script>alert('%s'); </script>" % (name, question)
 
 class Drawbutton(Widget):
     """

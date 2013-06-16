@@ -108,18 +108,20 @@ class MapLayerForm(ElementForm):
         super(MapLayerForm, self).__init__(*args, **kwargs)
         
         if self.initial and 'question' in self.initial:
-            self.initial['question'] = self.initial['question'][0]
+            self.initial['question'] = self.initial['question'][0] #SoftGIS hack, translate field
 
         queryset=MapFileUpload.objects.all()
         choices = [(x.file.name, x.name) for x in queryset]
         self.fields['question'].widget.choices = choices
+    
+    # map = property(set, get)
         
     def render(self, question, name, html):
         return MapLayer().render(question, name)
     
     def clean_question(self):
-        html = self.cleaned_data['question']
-        return [html for x in settings.LANGUAGES] # SotfGIS Hack!
+        question = self.cleaned_data['question']
+        return [question for x in settings.LANGUAGES] # SotfGIS Hack!
     
     def save(self, commit=True): # SoftGIS Hack!
         model = super(MapLayerForm, self).save(commit=False)
@@ -133,8 +135,7 @@ class MapLayerForm(ElementForm):
                 gen_html = '<label>%s</label>' % self.cleaned_data['question'][i]
                 setattr(model, 'html_%s' % lang[0], gen_html)
                 setattr(model, 'name_%s' % lang[0], name) # all langages should have the same name
-            
-        # Save the fields
+
         if commit:
             model.save()
             

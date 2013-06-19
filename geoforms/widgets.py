@@ -20,8 +20,9 @@ from geonition_utils.widgets import Checkbox
 class MapLayer(Widget):
     
     def render(self, question, name):
-        print "MapLayer render"
         # do we need name? label for hidden field?
+        # t = Template('templates/maplayertemplate.html
+        # render t.render({'url':question})
         return "<label>%s</label><script>alert('%s'); </script>" % (name, question)
 
 class Drawbutton(Widget):

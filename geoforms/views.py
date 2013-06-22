@@ -23,7 +23,7 @@ def questionnaire(request, questionnaire_slug, template=''):
     quest = Questionnaire.on_site.select_related().get(slug = questionnaire_slug)
 
     form_list = quest.geoforms.all().order_by('questionnaireform__order')
-    print form_list
+    
     elements = {}
     popup_set = set(Geoform.objects.filter(page_type = 'popup').values_list('slug', flat=True))
     bigcontent_forms = set()

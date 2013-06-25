@@ -151,6 +151,7 @@ var MapLayerList = new Array();
 
 var map_layer_group = [];
 var map_layer_group_controlls = [];
+var feature_attr = [];
 var data_group = 'Q-{{ questionnaire.slug }}';
 var questionnaire_area = {{ questionnaire.area.json|safe }};
 // add crs to area
@@ -290,10 +291,12 @@ jQuery(document).ready(function() {
 		        var select_feature_control_new = new OpenLayers.Control.SelectFeature(
 		                [polygonLayer],
 		                {
-		                id: 'selectcontrol',
+		                id: 'selectfeature',
 		                onSelect: function(evt){
+		                		console.log('X --- ' + x);
 		                		
-		                		var popup_name = MapLayerList[x]['popup'];
+		                		var popup_name = 'popup1-5';//MapLayerList[x]['popup'];
+		                		console.log('popup_name = '+ MapLayerList[x]['popup']);
 		                		//var name = MapLayerList[x]['file_path'];
 							    var popupcontent = " default info content ";
 							
@@ -302,7 +305,6 @@ jQuery(document).ready(function() {
 							    	
 							        var content = $('#' + popup_name).find('form').html();
 							        popupcontent = content;
-							        console.log('content --- ' + content);
 							    }
 		                		
 							    evt.lonlat = new OpenLayers.LonLat(
@@ -314,7 +316,7 @@ jQuery(document).ready(function() {
 							    };
 							    
 							    //evt.attributes.name = name;
-							
+								
 							    //the createPopup function did not seem to work so here
 							    evt.popup = new OpenLayers.Popup.FramedCloud(
 							                        evt.id,
@@ -337,6 +339,7 @@ jQuery(document).ready(function() {
 		                });
 		        
 		        var highlightCtrl = new OpenLayers.Control.SelectFeature(polygonLayer, {
+		        	id: 'selectfeature',
 	                hover: true,
 	                highlightOnly: true,
 	                renderIntent: "temporary",
@@ -346,6 +349,7 @@ jQuery(document).ready(function() {
 		                		map.removePopup(gnt.questionnaire.popup_hint);
 	    						gnt.questionnaire.popup_hint = undefined;
 		                	}
+		                	
 								popup = new OpenLayers.Popup.FramedCloud("chicken",
 										evt.feature.geometry.getBounds().getCenterLonLat(),
 								        new OpenLayers.Size(100,100),
@@ -382,14 +386,34 @@ jQuery(document).ready(function() {
         	current_page_name = parseInt(MapLayerList[0]['form_length']);
         }
     	var temp  = parseInt(current_page_name)-1;
-    	console.log("priv :"+temp + "   p_on:"+current_page_name);
     		for( x in map_layer_group){
     			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
     			if( map_layer_group[x].form_name == temp ) {
     				map_layer_group[x].setVisibility(true);
-    				map_layer_group_controlls[x].activate();
+    				//var selectcontrol = map.getControl('selectfeature');
+                    //selectcontrol.activate();
+                    //var drawcontrol_id = 'drawcontrol';
+                    //var drawcontrol = map.getControl(drawcontrol_id);
+                    //if(drawcontrol!=null)drawcontrol.deactivate();
+                    //var selectcontrol_id = 'selectcontrol';
+                    //var selectcontrol = map.getControl(selectcontrol_id);
+                    //selectcontrol.activate();
+                    //console.log('map.getControl(selectfeature) = ' + map.getControl('selectfeature'));
+                   // for( x in map.getControl('selectfeature')){
+                   //	console.log(" -- " + x + " -- " + map.getControl('selectfeature')[x]);
+                   // }
+                   // console.log('selectcontrol.activate();');
     			} else {
     				map_layer_group[x].setVisibility(false);
+    				//var selectcontrol = map.getControl('selectcontrol');
+                    //selectcontrol.deactivate();
+                    //var drawcontrol_id = 'drawcontrol';
+                    //var drawcontrol = map.getControl(drawcontrol_id);
+                    //if(drawcontrol!=null)drawcontrol.activate();
+                    //var selectcontrol_id = 'selectcontrol';
+                    //var selectcontrol = map.getControl(selectcontrol_id);
+                    //selectcontrol.deactivate();
+                    //console.log('selectcontrol.deactivate()');
     			}
     		}
     	});
@@ -400,12 +424,32 @@ jQuery(document).ready(function() {
         }
         var temp  = parseInt(current_page_name)+1;
     		for( x in map_layer_group){
-    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
     			if( map_layer_group[x].form_name == temp ) {
     				map_layer_group[x].setVisibility(true);
-    				map_layer_group_controlls[x].activate();
+    				//var selectcontrol = map.getControl('selectfeature');
+                    //selectcontrol.activate();
+                    //var drawcontrol_id = 'drawcontrol';
+                    //var drawcontrol = map.getControl(drawcontrol_id);
+                    //if(drawcontrol!=null)drawcontrol.deactivate();
+                    //var selectcontrol_id = 'selectcontrol';
+                    //var selectcontrol = map.getControl(selectcontrol_id);
+                    //selectcontrol.activate();
+                    //console.log('map.getControl(selectfeature) = ' + map.getControl('selectfeature'));
+                    //for( x in map.getControl('selectfeature')){
+                    //	console.log(" -- " + x + " -- " + map.getControl('selectfeature')[x]);
+                    //}
+                    //console.log('selectcontrol.activate();');
     			} else {
     				map_layer_group[x].setVisibility(false);
+    				//var selectcontrol = map.getControl('selectcontrol');
+                    //selectcontrol.deactivate();
+                    //var drawcontrol_id = 'drawcontrol';
+                    //var drawcontrol = map.getControl(drawcontrol_id);
+                    //if(drawcontrol!=null)drawcontrol.activate();
+                    //var selectcontrol_id = 'selectcontrol';
+                    //var selectcontrol = map.getControl(selectcontrol_id);
+                    //selectcontrol.deactivate();
+                    //console.log('selectcontrol.deactivate()');
     			}
     		}
     });

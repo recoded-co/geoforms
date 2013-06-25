@@ -33,11 +33,12 @@ def questionnaire(request, questionnaire_slug, template=''):
         popup_elements_map = form.elements.filter(element_type = 'map').values_list('html', flat=True)
         
         wms_elements = form.elements.filter(element_type = 'wms-layer')
-
+        print "---------" + str(u"{0}".format(form.name))
         # bigcontent_forms jest to lista dla ktorej wyswietlany jest na frontpagu big content - bez mapy
         if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) ==0 :
-            print "form name" + str(form.name)
-            bigcontent_forms.add(form.name)
+            print "---------" + u"{0}".format(form.name)
+            print "---------" + u"{0}".format(form.name)
+            bigcontent_forms.add(u"{0}".format(form.name))
 
         for e in popup_elements:
             soup = BeautifulSoup(e)

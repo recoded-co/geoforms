@@ -134,6 +134,7 @@ active_class: the class to use when a button is activated
                 }
             },
             deactivate: function() {
+            	alert('deactivate');
                 this.element.removeClass( this.options['active_class'] );
                 var drawcontrol_id = this.options['drawcontrol'];
                 var drawcontrol = map.getControl(drawcontrol_id);
@@ -147,6 +148,7 @@ active_class: the class to use when a button is activated
 
             },
             activate: function() {
+            	alert('activate');
                 if(this.element.attr('disabled') !== 'disabled') {
 
                     //unselect the others

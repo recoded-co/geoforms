@@ -52,7 +52,6 @@ class GeoformElementAdmin(TranslationAdmin, admin.ModelAdmin):
         setattr(self,
                 'search_fields',
                 sfields)
-        
 
 class FormElementAdmin(admin.ModelAdmin):
     ordering = ['geoform', 'order']

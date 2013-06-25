@@ -1,5 +1,6 @@
 {% extends "base_map.html" %}
 {% load i18n %}
+{% load url from future %}
 
 {% block stylesheet %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/questionnaire.css" />
@@ -39,8 +40,8 @@ var MapLayerList = new Array();
                         <div class="form_element" data-element-type="{{element.element_type}}">
                            
                            {% if element.element_type == 'map' %}
-                                             
-                           		<script>
+				                                             
+                          		<script>
                            			var element = '{{ element.html|safe }}';
                            			element = element.replace("<label>","");
                            			element = element.replace("</label>","");
@@ -52,7 +53,7 @@ var MapLayerList = new Array();
 	                           		MapLayerList.push({	'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 
 	                           											'color':color, 
 	                           											'popup':popup, 
-	                           											'form_name':'{{ forloop.counter}}', 
+	                           											'form_name':'{{ forloop.parentloop.parentloop.counter }}', 
 	                           											'form_length':'{{ form_list|length|add:1 }}',
 	                           											'name_param': name_param
 	                           										});
@@ -384,10 +385,12 @@ jQuery(document).ready(function() {
     	var temp  = parseInt(current_page_name)-1;
     	console.log("priv :"+temp + "   p_on:"+current_page_name);
     		for( x in map_layer_group){
-    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			console.log(map_layer_group[x].form_name+" -  " + temp);
     			if( map_layer_group[x].form_name == temp ) {
     				map_layer_group[x].setVisibility(true);
     				map_layer_group_controlls[x].activate();
+				map.zoomToExtent(map_layer_group[x].getExtent());
+				
     			} else {
     				map_layer_group[x].setVisibility(false);
     			}
@@ -400,10 +403,11 @@ jQuery(document).ready(function() {
         }
         var temp  = parseInt(current_page_name)+1;
     		for( x in map_layer_group){
-    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			console.log(map_layer_group[x].form_name+' -  ' + temp);
     			if( map_layer_group[x].form_name == temp ) {
     				map_layer_group[x].setVisibility(true);
     				map_layer_group_controlls[x].activate();
+				map.zoomToExtent(map_layer_group[x].getExtent());
     			} else {
     				map_layer_group[x].setVisibility(false);
     			}

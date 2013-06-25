@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 import abc
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -48,13 +49,16 @@ class ElementForm(forms.ModelForm):
         """
         print 'super %s ' % str(kwargs)
         super(ElementForm, self).__init__(*args, **kwargs)
- 
         # Set the form fields based on the model object
         if kwargs.has_key('instance'):
+            print 'instance:'+str(kwargs['instance'])
             initial_values = []
             for lang in settings.LANGUAGES:
+                print lang
+                print 'get:'+str(getattr(kwargs['instance'], 'html_%s' % lang[0]))
                 soup = BeautifulSoup(getattr(kwargs['instance'],
                                              'html_%s' % lang[0]))
+                print soup
                 initial_values.append(soup.label.text)
             
             self.initial['question'] = initial_values
@@ -110,13 +114,14 @@ class MapLayerForm(ElementForm):
     popup = forms.ChoiceField(choices = (('',''),),
                               label = _('popup for the place, route or area'),
                               help_text = _('Choose the popup to use for the place, route, or area.'))
-    name_param = forms.CharField(max_length = 7,
-                            widget = ColorInput,
+    name_param = forms.CharField(max_length = 70,
+                            #widget = ColorInput,
                             label = _('gml select parameter'),
                             help_text = _('Wpisac podpis'))
     
     
     def __init__(self, *args, **kwargs):
+        print 'MapLayerForm init:'+str(kwargs)
         super(MapLayerForm, self).__init__(*args, **kwargs)
         
         self.fields['popup'] = forms.ChoiceField(
@@ -168,6 +173,7 @@ class MapLayerForm(ElementForm):
         print "MapLayerForm save "
         
         if self.is_valid():
+            print 'form is valid saving'
             name = self.cleaned_data['name'][:200]
             if ' ' in name:
                 name = name.replace(' ', '-')
@@ -177,8 +183,10 @@ class MapLayerForm(ElementForm):
             for i, lang in enumerate(settings.LANGUAGES):
                 gen_html = '<label>%s?%s?%s?%s</label>' % (self.cleaned_data['question'][i],self.cleaned_data['color'],self.cleaned_data['popup'],self.cleaned_data['name_param'])
                 print "MapLayerForm save gen_html: "+gen_html
-                setattr(model, 'html_%s' % lang[0], gen_html)
-                setattr(model, 'name_%s' % lang[0], name) # all langages should have the same name
+                print name
+                setattr(model, 'html_%s' % lang[i], gen_html)
+                setattr(model, 'name_%s' % lang[i], name) # all langages should have the same name
+            setattr(model, 'html', gen_html)
 
         if commit:
             model.save()

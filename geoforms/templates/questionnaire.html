@@ -1,5 +1,6 @@
 {% extends "base_map.html" %}
 {% load i18n %}
+{% load url from future %}
 
 {% block stylesheet %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/questionnaire.css" />
@@ -9,8 +10,8 @@
 {% block content %}
 
 <ul class="breadcrumb">
-    <li class="disk hover base_bgcolor" onclick="window.location = '{% url dashboard %}'">
-        <a href="{% url dashboard %}">
+    <li class="disk hover base_bgcolor" onclick="window.location = '{% url "dashboard" %}'">
+        <a href="{% url 'dashboard' %}">
             <h3>
             {% trans 'Questionnaires' %}
             </h3>
@@ -39,8 +40,8 @@ var MapLayerList = new Array();
                         <div class="form_element" data-element-type="{{element.element_type}}">
                            
                            {% if element.element_type == 'map' %}
-                                             
-                           		<script>
+				                                             
+                          		<script>
                            			var element = '{{ element.html|safe }}';
                            			element = element.replace("<label>","");
                            			element = element.replace("</label>","");
@@ -52,7 +53,7 @@ var MapLayerList = new Array();
 	                           		MapLayerList.push({	'file_path': 'http://{{current_site}}/{{ settings.MEDIA_URL }}'+path, 
 	                           											'color':color, 
 	                           											'popup':popup, 
-	                           											'form_name':'{{ forloop.counter}}', 
+	                           											'form_name':'{{ forloop.parentloop.parentloop.counter }}', 
 	                           											'form_length':'{{ form_list|length|add:1 }}',
 	                           											'name_param': name_param
 	                           										});
@@ -98,7 +99,7 @@ var MapLayerList = new Array();
             <div class="form_element">
                 <div class="prev_next_controls">
                     <a class="previous" href="#page_{{ forloop.counter }}">&larr;{% trans 'Previous' %}</a>
-                    <a class="previous" href="{% url dashboard %}">{% trans 'Quit and go to home page' %}</a>
+                    <a class="previous" href="{% url 'dashboard' %}">{% trans 'Quit and go to home page' %}</a>
                 </div>
             </div>
         </div>
@@ -145,12 +146,13 @@ var MapLayerList = new Array();
 {% endblock extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers-gnt.js"></script>
-<script type="text/javascript" src="{% url api_javascript %}"></script>
-<script type="text/javascript" src="{% url map_js map_slug_name=map_slug %}"></script>
+<script type="text/javascript" src="{% url 'api_javascript' %}"></script>
+<script type="text/javascript" src="{% url 'map_js' map_slug_name=map_slug %}"></script>
 <script type="text/javascript">
 
 var map_layer_group = [];
-var map_layer_group_controlls = [];
+var map_controlls = [];
+var map_controlls_high = [];
 var feature_attr = [];
 var data_group = 'Q-{{ questionnaire.slug }}';
 var questionnaire_area = {{ questionnaire.area.json|safe }};
@@ -259,21 +261,61 @@ jQuery(document).ready(function() {
         /* end WMS element handling */
         });
         
-        // w MapLayerList znajduje się lista z elementami do wyświetlenia na mapie
+        // MapLayerList contains elements to znajduje się lista z elementami do wyświetlenia na mapie
 		if(typeof MapLayerList != 'undefined'){
 			for( x in MapLayerList){
-	      		var styleMap = new OpenLayers.StyleMap(OpenLayers.Util.applyDefaults(
-			        {fillColor: MapLayerList[x]['color'], fillOpacity: 0.2, strokeColor: MapLayerList[x]['color']},
-			        OpenLayers.Feature.Vector.style["default"]));
-	      		
-	      		var polygonLayer = new OpenLayers.Layer.Vector("GML", {
-	                protocol: new OpenLayers.Protocol.HTTP({
+			        
+			    var prot = new OpenLayers.Protocol.HTTP({
 	                    url: MapLayerList[x]['file_path'],
 	                    format: new OpenLayers.Format.GML()                    
-	                }),
-	                styleMap: styleMap,
+	               });
+	      		
+	      		var polygonLayer = new OpenLayers.Layer.Vector("GML", {
+	                protocol: prot,
+	                eventListeners: {           
+        				'loadend': function (evt) {
+	        					if( MapLayerList[x].form_name == '1'){
+	        						map.zoomToExtent(polygonLayer.getDataExtent());
+	        					}
+        					}
+        				},
+	                styleMap: new OpenLayers.StyleMap({
+				        "default": new OpenLayers.Style({
+				            strokeColor: MapLayerList[x]['color'],
+				            strokeOpacity: .7,
+				            strokeWidth: 1,
+				            fillColor: MapLayerList[x]['color'],
+				            fillOpacity: .5,
+				            cursor: "pointer"
+				        }),
+				        "temporary": new OpenLayers.Style({
+				            strokeColor: MapLayerList[x]['color'],
+				            strokeOpacity: 1,
+				            strokeWidth: 2,
+				            fillColor: MapLayerList[x]['color'],
+				            fillOpacity: .9,
+				            cursor: "pointer",
+				            label: "${"+MapLayerList[x]['name_param']+"}"
+				        }),
+				        "select": new OpenLayers.Style({
+				            strokeColor: MapLayerList[x]['color'],
+				            strokeOpacity: .9,
+				            strokeWidth: 2,
+				            fillColor: MapLayerList[x]['color'],
+				            fillOpacity: .9,
+				            graphicZIndex: 2,
+				            cursor: "pointer"
+				        })
+				    }),
 	                strategies: [new OpenLayers.Strategy.Fixed()]
 	            });
+	            
+	            polygonLayer.attributes = {
+	                name: "toto is some text about the world",
+	                age: 20,
+	                favColor: 'red',
+	                align: "cm"
+	            };
 	            
 	            // new parameter holds form name for viewing on specific page
 	      		polygonLayer.form_name = MapLayerList[x]['form_name']
@@ -281,22 +323,14 @@ jQuery(document).ready(function() {
 	      		map.addLayer(polygonLayer);
 	      		map_layer_group.push(polygonLayer);
 	      		
-	      		var polygonControl = new OpenLayers.Control.DrawFeature(polygonLayer,
-                                    OpenLayers.Handler.Polygon,
-                                    {'id': 'mapcontrol',
-                                    //'featureAdded': gnt.questionnaire.feature_added_map
-                                   });
-                                    
                 //select feature control
 		        var select_feature_control_new = new OpenLayers.Control.SelectFeature(
 		                [polygonLayer],
 		                {
 		                id: 'selectfeature',
 		                onSelect: function(evt){
-		                		console.log('X --- ' + x);
 		                		
-		                		var popup_name = 'popup1-5';//MapLayerList[x]['popup'];
-		                		console.log('popup_name = '+ MapLayerList[x]['popup']);
+		                		var popup_name = MapLayerList[x]['popup'];
 		                		//var name = MapLayerList[x]['file_path'];
 							    var popupcontent = " default info content ";
 							
@@ -315,8 +349,6 @@ jQuery(document).ready(function() {
 							        'contentHTML': popupcontent
 							    };
 							    
-							    //evt.attributes.name = name;
-								
 							    //the createPopup function did not seem to work so here
 							    evt.popup = new OpenLayers.Popup.FramedCloud(
 							                        evt.id,
@@ -333,7 +365,6 @@ jQuery(document).ready(function() {
 		                },
 		                onUnselect: gnt.questionnaire.on_feature_unselect_handler,
 		                toggle: false,
-		                clickout: true,
 		                multiple: false,
 		                hover: false
 		                });
@@ -341,40 +372,28 @@ jQuery(document).ready(function() {
 		        var highlightCtrl = new OpenLayers.Control.SelectFeature(polygonLayer, {
 		        	id: 'selectfeature',
 	                hover: true,
+	                clickout: true,
 	                highlightOnly: true,
 	                renderIntent: "temporary",
-	                eventListeners: {
-	                    featurehighlighted: function(evt){
-	                    	if( typeof (gnt.questionnaire.popup_hint) != 'undefined'){
-		                		map.removePopup(gnt.questionnaire.popup_hint);
-	    						gnt.questionnaire.popup_hint = undefined;
-		                	}
-		                	
-								popup = new OpenLayers.Popup.FramedCloud("chicken",
-										evt.feature.geometry.getBounds().getCenterLonLat(),
-								        new OpenLayers.Size(100,100),
-								        evt.feature.attributes[''+MapLayerList[x]['name_param']],
-								        null, true, function(evt) {
-								            console.log("  onClose  ");
-								            evt.unselectAll();
-								        });
-								gnt.questionnaire.popup_hint = popup;
-								map.addPopup(gnt.questionnaire.popup_hint);
-	                    },
-	                    featureunhighlighted: function(evt){
-	                    	map.removePopup(gnt.questionnaire.popup_hint);
-    						gnt.questionnaire.popup_hint = undefined;
-	                    },
-	                }
 	            });
 
-		        map.addControls([select_feature_control_new,
-		                         //polygonControl,
-		                         highlightCtrl
-		                         ]);  
-		        highlightCtrl.activate();  
-		        map_layer_group_controlls.push(highlightCtrl);          
-		        select_feature_control_new.activate();   
+		        map_controlls.push(select_feature_control_new);
+				map_controlls_high.push(highlightCtrl);
+		        
+		        if( MapLayerList[x].form_name == '1'){
+	      			polygonLayer.setVisibility(true);
+	      			map.addControl(highlightCtrl);
+	      			highlightCtrl.activate();      
+	      			map.addControl(select_feature_control_new);
+		        	select_feature_control_new.activate();
+	      		} else {
+	      			polygonLayer.setVisibility(false);
+	      			map.addControl(highlightCtrl);
+	      			highlightCtrl.deactivate();      
+	      			map.addControl(select_feature_control_new);
+		        	select_feature_control_new.deactivate();
+	      		}
+		           
 	      	}
 		}	
 	
@@ -387,33 +406,17 @@ jQuery(document).ready(function() {
         }
     	var temp  = parseInt(current_page_name)-1;
     		for( x in map_layer_group){
-    			console.log(current_page_name + ' == '+map_layer_group[x].form_name);
+    			console.log(map_layer_group[x].form_name+" -  " + temp);
     			if( map_layer_group[x].form_name == temp ) {
     				map_layer_group[x].setVisibility(true);
-    				//var selectcontrol = map.getControl('selectfeature');
-                    //selectcontrol.activate();
-                    //var drawcontrol_id = 'drawcontrol';
-                    //var drawcontrol = map.getControl(drawcontrol_id);
-                    //if(drawcontrol!=null)drawcontrol.deactivate();
-                    //var selectcontrol_id = 'selectcontrol';
-                    //var selectcontrol = map.getControl(selectcontrol_id);
-                    //selectcontrol.activate();
-                    //console.log('map.getControl(selectfeature) = ' + map.getControl('selectfeature'));
-                   // for( x in map.getControl('selectfeature')){
-                   //	console.log(" -- " + x + " -- " + map.getControl('selectfeature')[x]);
-                   // }
-                   // console.log('selectcontrol.activate();');
+    				map_controlls_high[x].activate();
+    				map_controlls[x].activate();
+					map.zoomToExtent(map_layer_group[x].getDataExtent());
+				
     			} else {
     				map_layer_group[x].setVisibility(false);
-    				//var selectcontrol = map.getControl('selectcontrol');
-                    //selectcontrol.deactivate();
-                    //var drawcontrol_id = 'drawcontrol';
-                    //var drawcontrol = map.getControl(drawcontrol_id);
-                    //if(drawcontrol!=null)drawcontrol.activate();
-                    //var selectcontrol_id = 'selectcontrol';
-                    //var selectcontrol = map.getControl(selectcontrol_id);
-                    //selectcontrol.deactivate();
-                    //console.log('selectcontrol.deactivate()');
+    				map_controlls[x].deactivate();
+    				map_controlls_high[x].deactivate();
     			}
     		}
     	});
@@ -424,31 +427,16 @@ jQuery(document).ready(function() {
         }
         var temp  = parseInt(current_page_name)+1;
     		for( x in map_layer_group){
-    			if( map_layer_group[x].form_name == temp ) {
-    				map_layer_group[x].setVisibility(true);
-    				//var selectcontrol = map.getControl('selectfeature');
-                    //selectcontrol.activate();
-                    //var drawcontrol_id = 'drawcontrol';
-                    //var drawcontrol = map.getControl(drawcontrol_id);
-                    //if(drawcontrol!=null)drawcontrol.deactivate();
-                    //var selectcontrol_id = 'selectcontrol';
-                    //var selectcontrol = map.getControl(selectcontrol_id);
-                    //selectcontrol.activate();
-                    //console.log('map.getControl(selectfeature) = ' + map.getControl('selectfeature'));
-                    //for( x in map.getControl('selectfeature')){
-                    //	console.log(" -- " + x + " -- " + map.getControl('selectfeature')[x]);
-                    //}
-                    //console.log('selectcontrol.activate();');
+	    			console.log(map_layer_group[x].form_name+' -  ' + temp);
+	    		if( map_layer_group[x].form_name == temp ) {
+	    			map_layer_group[x].setVisibility(true);
+    				map_controlls_high[x].activate();
+    				map_controlls[x].activate();
+					map.zoomToExtent(map_layer_group[x].getDataExtent());
     			} else {
     				map_layer_group[x].setVisibility(false);
-    				//var selectcontrol = map.getControl('selectcontrol');
-                    //selectcontrol.deactivate();
-                    //var drawcontrol_id = 'drawcontrol';
-                    //var drawcontrol = map.getControl(drawcontrol_id);
-                    //if(drawcontrol!=null)drawcontrol.activate();
-                    //var selectcontrol_id = 'selectcontrol';
-                    //var selectcontrol = map.getControl(selectcontrol_id);
-                    //selectcontrol.deactivate();
+    				map_controlls[x].deactivate();
+    				map_controlls_high[x].deactivate();
                     //console.log('selectcontrol.deactivate()');
     			}
     		}

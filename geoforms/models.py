@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from django.conf import settings
 from django.contrib.gis.db import models as geomodel
 from django.contrib.sites.managers import CurrentSiteManager

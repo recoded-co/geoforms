@@ -1,3 +1,4 @@
+# -*- encoding: utf-8 -*-
 from bs4 import BeautifulSoup
 from django.shortcuts import render_to_response
 from django.core.urlresolvers import reverse
@@ -23,22 +24,20 @@ def questionnaire(request, questionnaire_slug, template=''):
     quest = Questionnaire.on_site.select_related().get(slug = questionnaire_slug)
 
     form_list = quest.geoforms.all().order_by('questionnaireform__order')
-    print form_list
+
     elements = {}
     popup_set = set(Geoform.objects.filter(page_type = 'popup').values_list('slug', flat=True))
     bigcontent_forms = set()
     for form in form_list:
         popup_elements = form.elements.filter(element_type = 'drawbutton').values_list('html', flat=True)
-        
+
         popup_elements_map = form.elements.filter(element_type = 'map').values_list('html', flat=True)
-        
+
         wms_elements = form.elements.filter(element_type = 'wms-layer')
-        print "---------" + str(u"{0}".format(form.name))
-        # bigcontent_forms jest to lista dla ktorej wyswietlany jest na frontpagu big content - bez mapy
-        if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) ==0 :
-            print "---------" + u"{0}".format(form.name)
-            print "---------" + u"{0}".format(form.name)
-            bigcontent_forms.add(u"{0}".format(form.name))
+
+
+        if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) == 0:
+            bigcontent_forms.add(str(u"{0}".format(form.name)))
 
         for e in popup_elements:
             soup = BeautifulSoup(e)

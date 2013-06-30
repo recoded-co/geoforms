@@ -270,11 +270,12 @@ jQuery(document).ready(function() {
 	                    format: new OpenLayers.Format.GML()                    
 	               });
 	      		
+	      		
 	      		var polygonLayer = new OpenLayers.Layer.Vector("GML", {
 	                protocol: prot,
 	                eventListeners: {           
         				'loadend': function (evt) {
-	        					if( MapLayerList[x].form_name == '1'){
+	        					if( x == 0){
 	        						map.zoomToExtent(polygonLayer.getDataExtent());
 	        					}
         					}
@@ -309,13 +310,6 @@ jQuery(document).ready(function() {
 				    }),
 	                strategies: [new OpenLayers.Strategy.Fixed()]
 	            });
-	            
-	            polygonLayer.attributes = {
-	                name: "toto is some text about the world",
-	                age: 20,
-	                favColor: 'red',
-	                align: "cm"
-	            };
 	            
 	            // new parameter holds form name for viewing on specific page
 	      		polygonLayer.form_name = MapLayerList[x]['form_name']
@@ -380,7 +374,7 @@ jQuery(document).ready(function() {
 		        map_controlls.push(select_feature_control_new);
 				map_controlls_high.push(highlightCtrl);
 		        
-		        if( MapLayerList[x].form_name == '1'){
+		        if( x == 0){
 	      			polygonLayer.setVisibility(true);
 	      			map.addControl(highlightCtrl);
 	      			highlightCtrl.activate();      

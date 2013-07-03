@@ -331,8 +331,10 @@ jQuery(document).ready(function() {
 							    //get the right content for the popup
 							    if( popup_name !== undefined ) {
 							    	
-							        var content = $('#' + popup_name).find('form').html();
-							        popupcontent = content;
+							    	$('#' + popup_name).find('.remove').hide();
+							        var content = 	$('#' + popup_name).html();
+							        //var save = 		$('#' + popup_name).find('.popup_feature_buttons').html();
+							        popupcontent = content;//+save;
 							    }
 		                		
 							    evt.lonlat = new OpenLayers.LonLat(

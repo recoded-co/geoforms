@@ -440,11 +440,17 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
         gnt.questionnaire.create_widgets('.popupform.active');
         gnt.questionnaire.popup.updateSize();
 
+		if(buttons_behave == 'noButton'){
+			//connect the event to the infowindow buttons
+	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
+	                                                               gnt.questionnaire.save_handler);
+		} else {
 	        //connect the event to the infowindow buttons
 	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
 	                                                               gnt.questionnaire.save_handler);
 	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.remove').click([feature],
-	                                                                 gnt.questionnaire.remove_handler);
+	                                                            gnt.questionnaire.remove_handler);
+	    }
         return true;
 
     } else {

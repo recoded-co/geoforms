@@ -215,7 +215,13 @@ function count_results() {
 
 jQuery(document).ready(function() {
 	$('*').css('font-family','{{ org_settings.font|safe }}');
-    gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
+    	$('input[type*="text"]').bind('keypress', function(e) {
+		var code = (e.keyCode ? e.keyCode : e.which);
+			 if(code == 13) { 
+			 	e.preventDefault();
+			 }
+	});
+	gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given
         count_results();

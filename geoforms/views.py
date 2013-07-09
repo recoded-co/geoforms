@@ -35,9 +35,8 @@ def questionnaire(request, questionnaire_slug, template=''):
 
         wms_elements = form.elements.filter(element_type = 'wms-layer')
 
-
-        if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) == 0:
-            bigcontent_forms.add(str(u"{0}".format(form.name)))
+	if len(popup_elements) == 0 and len(wms_elements) == 0 and len(popup_elements_map) == 0:
+            bigcontent_forms.add(form.name)
 
         for e in popup_elements:
             soup = BeautifulSoup(e)

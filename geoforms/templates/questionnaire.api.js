@@ -562,9 +562,9 @@ gnt.questionnaire.init = function(forms,
 
         //create accordion
         $( accordion ).accordion({
-        	animate: false,
             active: active_page,
             autoHeight: false,
+            animated: false,
             change: function(event, ui) {
                 var oldHash = location.hash.split('#')[1];
                 var pageNr = ui.options.active + 1;

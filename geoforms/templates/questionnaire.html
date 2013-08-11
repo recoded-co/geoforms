@@ -221,6 +221,7 @@ jQuery(document).ready(function() {
 			 	e.preventDefault();
 			 }
 	});
+	
 	gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given
@@ -267,7 +268,7 @@ jQuery(document).ready(function() {
         /* end WMS element handling */
         });
         
-        // MapLayerList contains elements to znajduje się lista z elementami do wyświetlenia na mapie
+        // Things to show on map
 		if(typeof MapLayerList != 'undefined'){
 			for( x in MapLayerList){
 			        
@@ -400,7 +401,7 @@ jQuery(document).ready(function() {
 	      	}
 		}	
 	
-        makeWMSLayerSwitcher(1);
+        makeWMSLayerSwitcher(1); 
     });
     $('.previous').on('click',function(e,data){
     	var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
@@ -429,20 +430,20 @@ jQuery(document).ready(function() {
         	current_page_name = parseInt(MapLayerList[0]['form_length']);
         }
         var temp  = parseInt(current_page_name)+1;
-    		for( x in map_layer_group){
-	    			//console.log(map_layer_group[x].form_name+' -  ' + temp);
-	    		if( map_layer_group[x].form_name == temp ) {
-	    			map_layer_group[x].setVisibility(true);
-    				map_controlls_high[x].activate();
-    				map_controlls[x].activate();
-					map.zoomToExtent(map_layer_group[x].getDataExtent());
-    			} else {
-    				map_layer_group[x].setVisibility(false);
-    				map_controlls[x].deactivate();
-    				map_controlls_high[x].deactivate();
-                    //console.log('selectcontrol.deactivate()');
-    			}
-    		}
+		for( x in map_layer_group){
+    			//console.log(map_layer_group[x].form_name+' -  ' + temp);
+    		if( map_layer_group[x].form_name == temp ) {
+    			map_layer_group[x].setVisibility(true);
+				map_controlls_high[x].activate();
+				map_controlls[x].activate();
+				map.zoomToExtent(map_layer_group[x].getDataExtent());
+			} else {
+				map_layer_group[x].setVisibility(false);
+				map_controlls[x].deactivate();
+				map_controlls_high[x].deactivate();
+                //console.log('selectcontrol.deactivate()');
+			}
+		}
     });
 });
 

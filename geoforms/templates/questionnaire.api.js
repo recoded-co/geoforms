@@ -545,7 +545,8 @@ gnt.questionnaire.init = function(forms,
 
     //create a session for the anonymoususer
     gnt.auth.create_session();
-
+	
+	var animation_speed = 0;
 
     if( accordion !== undefined ) {
         var origHash = location.hash.split('#')[1];
@@ -555,12 +556,13 @@ gnt.questionnaire.init = function(forms,
         }
         // set the size according to active page
         if($('#page_' + (active_page + 1)).hasClass('bigcontent')) {
-            $('#main .span_left').switchClass('smallcontent', 'bigcontent', '300');
-            $('#main .span_right').switchClass('smallcontent', 'bigcontent', '300');
+            $('#main .span_left').toggleClass('smallcontent bigcontent');
+            $('#main .span_right').toggleClass('smallcontent bigcontent');
         }
 
         //create accordion
         $( accordion ).accordion({
+        	animate: false,
             active: active_page,
             autoHeight: false,
             change: function(event, ui) {
@@ -577,11 +579,13 @@ gnt.questionnaire.init = function(forms,
 
                 //make content big if no drawbuttons on page
                 if(ui.newHeader.hasClass('bigcontent')) {
-                    $('#main .span_left').switchClass('smallcontent', 'bigcontent', '300');
-                    $('#main .span_right').switchClass('smallcontent', 'bigcontent', '300');
+                    $('#main .span_left').toggleClass('smallcontent bigcontent');
+                    $('#main .span_right').toggleClass('smallcontent bigcontent');
+                    
                 } else {
-                    $('#main .span_left').switchClass('bigcontent', 'smallcontent', '300');
-                    $('#main .span_right').switchClass('bigcontent', 'smallcontent', '300', 'swing', function(){ map.updateSize();});
+                    $('#main .span_left').toggleClass('bigcontent smallcontent');
+                    $('#main .span_right').toggleClass('bigcontent smallcontent');
+                    map.updateSize();
                 }
 
             }

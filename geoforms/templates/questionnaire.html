@@ -214,7 +214,8 @@ function count_results() {
 {% block questionnaire_init %}
 
 jQuery(document).ready(function() {
-	//	$('*').css('font-family','{{ org_settings.font|safe }}');
+		$('*').css('font-family','{{ org_settings.font|safe }}');
+		$('.ui-widget').css('font-size','{{ org_settings.font_size|safe }}');
     	$('input[type*="text"]').bind('keypress', function(e) {
 		var code = (e.keyCode ? e.keyCode : e.which);
 			 if(code == 13) { 

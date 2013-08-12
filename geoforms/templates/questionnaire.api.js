@@ -585,7 +585,8 @@ gnt.questionnaire.init = function(forms,
                 } else {
                     $('#main .span_left').toggleClass('bigcontent smallcontent');
                     $('#main .span_right').toggleClass('bigcontent smallcontent');
-                    map.updateSize();
+                    $('#main .span_right').switchClass('smallcontent', 'smallcontent', '3', 'swing', function(){ map.updateSize();})
+                    //map.updateSize();
                 }
 
             }

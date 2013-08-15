@@ -145,7 +145,7 @@ var MapLayerList = new Array();
 <script type="text/javascript" src="{{ STATIC_URL }}js/feedback.js"></script>
 {% endblock extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers-gnt.js"></script>
 <script type="text/javascript" src="{% url 'api_javascript' %}"></script>
 <script type="text/javascript" src="{% url 'map_js' map_slug_name=map_slug %}"></script>
 <script type="text/javascript" charset="utf-8">
@@ -408,7 +408,9 @@ jQuery(document).ready(function() {
     
     $('.previous').on('click',function(e,data){
     	var active = $('#forms').accordion('option','active');
-    	var temp  = active-1; 
+    	//console.log("active " + active);
+    		
+    	var temp  = active; 
    		for( x in map_layer_group){
    			console.log('MAP_LAYER_GROUP');
 			console.log(map_layer_group[x].form_name+" -  " + temp);
@@ -427,7 +429,10 @@ jQuery(document).ready(function() {
     
     $('.next').on('click',function(e,data){
         var active = $('#forms').accordion('option','active');
-    	var temp  = active+1; 
+    	var temp  = active+2; 
+    	//console.log("active " + active);
+    	//console.log("temp " + temp);
+    	
 		console.log(map_layer_group);
 		for( x in map_layer_group){
 			console.log('MAP_LAYER_GROUP');

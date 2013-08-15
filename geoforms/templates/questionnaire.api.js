@@ -618,7 +618,7 @@ gnt.questionnaire.init = function(forms,
                   	$('#main .span_right').removeClass('bigcontent').addClass('smallcontent');
     				map.updateSize();
                 }
-				updateMapZoom(); 
+				//updateMapZoom(); 
             }
         });
 

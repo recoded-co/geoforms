@@ -145,7 +145,7 @@ var MapLayerList = new Array();
 <script type="text/javascript" src="{{ STATIC_URL }}js/feedback.js"></script>
 {% endblock extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers-gnt.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers.js"></script>
 <script type="text/javascript" src="{% url 'api_javascript' %}"></script>
 <script type="text/javascript" src="{% url 'map_js' map_slug_name=map_slug %}"></script>
 <script type="text/javascript" charset="utf-8">
@@ -222,6 +222,7 @@ jQuery(document).ready(function() {
 			 	e.preventDefault();
 			 }
 	});
+	
 	gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given
@@ -268,7 +269,8 @@ jQuery(document).ready(function() {
         /* end WMS element handling */
         });
         
-        // MapLayerList contains elements to znajduje się lista z elementami do wyświetlenia na mapie
+        // Things to show on map
+        
 		if(typeof MapLayerList != 'undefined'){
 			for( x in MapLayerList){
 			        
@@ -401,49 +403,49 @@ jQuery(document).ready(function() {
 	      	}
 		}	
 	
-        makeWMSLayerSwitcher(1);
+        makeWMSLayerSwitcher(1); 
     });
+    
     $('.previous').on('click',function(e,data){
-    	var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
-    	if (current_page_name === undefined){
-        	current_page_name = parseInt(MapLayerList[0]['form_length']);
-        }
-    	var temp  = parseInt(current_page_name)-1;
-    		for( x in map_layer_group){
-    			//console.log(map_layer_group[x].form_name+" -  " + temp);
-    			if( map_layer_group[x].form_name == temp ) {
-    				map_layer_group[x].setVisibility(true);
-    				map_controlls_high[x].activate();
-    				map_controlls[x].activate();
-					map.zoomToExtent(map_layer_group[x].getDataExtent());
-				
-    			} else {
-    				map_layer_group[x].setVisibility(false);
-    				map_controlls[x].deactivate();
-    				map_controlls_high[x].deactivate();
-    			}
-    		}
+    	var active = $('#forms').accordion('option','active');
+    	var temp  = active-1; 
+   		for( x in map_layer_group){
+   			console.log('MAP_LAYER_GROUP');
+			console.log(map_layer_group[x].form_name+" -  " + temp);
+			if( map_layer_group[x].form_name == temp ) {
+				map_layer_group[x].setVisibility(true);
+				map_controlls_high[x].activate();
+				map_controlls[x].activate();
+				map.zoomToExtent(map_layer_group[x].getDataExtent());
+			} else {
+				map_layer_group[x].setVisibility(false);
+				map_controlls[x].deactivate();
+				map_controlls_high[x].deactivate();
+			}
+		}
     	});
+    
     $('.next').on('click',function(e,data){
-        var current_page_name = $(this).parent().parent().parent().parent().attr('data-page');
-        if (current_page_name === undefined){
-        	current_page_name = parseInt(MapLayerList[0]['form_length']);
-        }
-        var temp  = parseInt(current_page_name)+1;
-    		for( x in map_layer_group){
-	    			//console.log(map_layer_group[x].form_name+' -  ' + temp);
-	    		if( map_layer_group[x].form_name == temp ) {
-	    			map_layer_group[x].setVisibility(true);
-    				map_controlls_high[x].activate();
-    				map_controlls[x].activate();
-					map.zoomToExtent(map_layer_group[x].getDataExtent());
-    			} else {
-    				map_layer_group[x].setVisibility(false);
-    				map_controlls[x].deactivate();
-    				map_controlls_high[x].deactivate();
-                    //console.log('selectcontrol.deactivate()');
-    			}
-    		}
+        var active = $('#forms').accordion('option','active');
+    	var temp  = active+1; 
+		console.log(map_layer_group);
+		for( x in map_layer_group){
+			console.log('MAP_LAYER_GROUP');
+    		console.log(map_layer_group[x].form_name+' -  ' + temp);
+    		if( map_layer_group[x].form_name == temp ) {
+    			map_layer_group[x].setVisibility(true);
+				map_controlls_high[x].activate();
+				map_controlls[x].activate();
+				console.log('x:'+x+' vs: '+temp);
+				console.log(map_layer_group[x]);
+				map.zoomToExtent(map_layer_group[x].getDataExtent());
+			} else {
+				map_layer_group[x].setVisibility(false);
+				map_controlls[x].deactivate();
+				map_controlls_high[x].deactivate();
+                console.log('selectcontrol.deactivate()');
+			}
+		}
     });
 });
 

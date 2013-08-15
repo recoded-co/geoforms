@@ -212,6 +212,34 @@ active_class: the class to use when a button is activated
         });
 })( jQuery );
 
+/*
+Sets map to the questionnaire area
+*/
+function updateMapZoom(){
+	var gf = new OpenLayers.Format.GeoJSON(),
+	    source_proj,
+	    target_proj;
+	console.log('1');
+	var questionnaire_area_feature = gf.read( questionnaire.questionnaire_area );
+	console.log('2');
+	// Projection objects for transformations
+	if (questionnaire_area.crs !== undefined) {
+		console.log('3');
+	    source_proj = new OpenLayers.Projection(questionnaire_area.crs.properties.code);
+	}
+	else {
+		console.log('4');
+	    source_proj = new OpenLayers.Projection("EPSG:4326");
+	}
+	console.log('5');
+	target_proj = new OpenLayers.Projection(map.getProjection());
+	// Transform geometry to map projection
+	console.log('6');
+	questionnaire_area_feature[0].geometry.transform(source_proj, target_proj);
+	console.log('bounds:'+questionnaire_area_feature[0].geometry.getBounds());
+	console.log('scale:'+questionnaire_area_feature[0].geometry.getBounds().scale(questionnaire.scale_visible_area));
+	map.zoomToExtent( questionnaire_area_feature[0].geometry.getBounds().scale(questionnaire.scale_visible_area),true );
+}
 
 /*
 This is a helper function that returns
@@ -535,7 +563,7 @@ gnt.questionnaire.on_feature_unselect_handler = function(evt) {
                        questionnaire
  data_group -- the group that should be used and where the data is stored
  callback -- function to be called after the questionnaire has been set up
-*/
+*/			     
 gnt.questionnaire.init = function(forms,
                                   popups,
                                   accordion,
@@ -545,7 +573,8 @@ gnt.questionnaire.init = function(forms,
 
     //create a session for the anonymoususer
     gnt.auth.create_session();
-
+	
+	var animation_speed = 0;
 
     if( accordion !== undefined ) {
         var origHash = location.hash.split('#')[1];
@@ -554,15 +583,16 @@ gnt.questionnaire.init = function(forms,
             active_page = origHash.slice(5) - 1;
         }
         // set the size according to active page
+        //console.log('set the size according to active page ('+(active_page + 1)+')');
         if($('#page_' + (active_page + 1)).hasClass('bigcontent')) {
-            $('#main .span_left').switchClass('smallcontent', 'bigcontent', '300');
-            $('#main .span_right').switchClass('smallcontent', 'bigcontent', '300');
-        }
-
+        	$('#main .span_left').removeClass('smallcontent').addClass('bigcontent');
+        	$('#main .span_right').removeClass('smallcontent').addClass('bigcontent');
+		}
         //create accordion
         $( accordion ).accordion({
             active: active_page,
             autoHeight: false,
+            animated: false,
             change: function(event, ui) {
                 var oldHash = location.hash.split('#')[1];
                 var pageNr = ui.options.active + 1;
@@ -574,16 +604,21 @@ gnt.questionnaire.init = function(forms,
                 $('#main .span_left').scrollTop(0);
             },
             changestart: function(event, ui) {
-
+            
+             	
+			    
                 //make content big if no drawbuttons on page
                 if(ui.newHeader.hasClass('bigcontent')) {
-                    $('#main .span_left').switchClass('smallcontent', 'bigcontent', '300');
-                    $('#main .span_right').switchClass('smallcontent', 'bigcontent', '300');
+                	//console.log('changing to bigcontent :'+ui.newHeader);
+                    $('#main .span_left').removeClass('smallcontent').addClass('bigcontent');
+                    $('#main .span_right').removeClass('smallcontent').addClass('bigcontent');
                 } else {
-                    $('#main .span_left').switchClass('bigcontent', 'smallcontent', '300');
-                    $('#main .span_right').switchClass('bigcontent', 'smallcontent', '300', 'swing', function(){ map.updateSize();});
+                	//console.log('changing to smallcontent : '+ui.newHeader);
+                    $('#main .span_left').removeClass('bigcontent').addClass('smallcontent');
+                  	$('#main .span_right').removeClass('bigcontent').addClass('smallcontent');
+    				map.updateSize();
                 }
-
+				updateMapZoom(); 
             }
         });
 
@@ -792,23 +827,9 @@ gnt.questionnaire.init = function(forms,
         });
 
         select_feature_control.activate();
-
-        var gf = new OpenLayers.Format.GeoJSON(),
-            source_proj,
-            target_proj;
-        var questionnaire_area_feature = gf.read( questionnaire_area );
-        // Projection objects for transformations
-        if (questionnaire_area.crs !== undefined) {
-            source_proj = new OpenLayers.Projection(questionnaire_area.crs.properties.code);
-        }
-        else {
-            source_proj = new OpenLayers.Projection("EPSG:4326");
-        }
-        target_proj = new OpenLayers.Projection(map.getProjection());
-        // Transform geometry to map projection
-        questionnaire_area_feature[0].geometry.transform(source_proj, target_proj);
-        map.zoomToExtent( questionnaire_area_feature[0].geometry.getBounds().scale(questionnaire.scale_visible_area) );
-
+        
+		updateMapZoom();
+        
         //set to annotations layer if visible
         if(questionnaire.show_area) {
             annotationLayer.addFeatures(questionnaire_area_feature);

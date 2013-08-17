@@ -215,14 +215,12 @@ function count_results() {
 
 jQuery(document).ready(function() {
 		$('*').css('font-family','{{ org_settings.font|safe }}');
-		$('.ui-widget').css('font-size','{{ org_settings.font_size|safe }}');
     	$('input[type*="text"]').bind('keypress', function(e) {
 		var code = (e.keyCode ? e.keyCode : e.which);
 			 if(code == 13) { 
 			 	e.preventDefault();
 			 }
 	});
-	
 	gnt.questionnaire.init('#forms', '', '#forms', questionnaire_area, data_group, function() {
 
         //count the amount of answeres given

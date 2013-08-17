@@ -14,7 +14,7 @@ gnt.questionnaire.popup; //only one popup at the time
 gnt.questionnaire.property_id;
 
 //fix for OpenLayers 2.12 RC5 check 29.5.2012 should be null and automatic
-OpenLayers.Popup.FramedCloud.prototype.maxSize = new OpenLayers.Size(420, 640);
+OpenLayers.Popup.FramedCloud.prototype.maxSize = new OpenLayers.Size(620, 840);
 
 /*
 Draw Button is a drawing
@@ -398,8 +398,9 @@ This function makes the popup and shows it for the feature given.
 Expects there to be a feature.popup created
 that can be called.
 */
-gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons_behave) {
 
+gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons_behave) {
+	
 	if ( feature.popup !== undefined ) {
     
         if( popup_name === undefined ) {
@@ -423,6 +424,8 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
       	gnt.questionnaire.popup = feature.popup;
       	map.addPopup(gnt.questionnaire.popup);
         //map.addPopup(gnt.questionnaire.popup);
+
+		
 
         //add a class to the form to recognize it as active
         $( '.olFramedCloudPopupContent form[name="' + popup_name + '"]' ).addClass( 'active' );
@@ -465,7 +468,7 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
         //Create jQuery sliders and update popup size
         gnt.questionnaire.create_widgets('.popupform.active');
         gnt.questionnaire.popup.updateSize();
-
+        
 		if(buttons_behave == 'noButton'){
 			//connect the event to the infowindow buttons
 	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
@@ -604,9 +607,6 @@ gnt.questionnaire.init = function(forms,
                 $('#main .span_left').scrollTop(0);
             },
             changestart: function(event, ui) {
-            
-             	
-			    
                 //make content big if no drawbuttons on page
                 if(ui.newHeader.hasClass('bigcontent')) {
                 	//console.log('changing to bigcontent :'+ui.newHeader);
@@ -618,7 +618,6 @@ gnt.questionnaire.init = function(forms,
                   	$('#main .span_right').removeClass('bigcontent').addClass('smallcontent');
     				map.updateSize();
                 }
-				//updateMapZoom(); 
             }
         });
 
@@ -951,9 +950,27 @@ gnt.questionnaire.create_widgets = function(css_selector) {
         step = $(this).attr('step');
         value = $(this).attr('value');
         name = $(this).attr('name');
-        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"></div>');
+        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"><output>'+ value +'</output></div>');
         //the step has to be a integer e.g. step is 1,2,3,4,,, in UI sliders
 
+		var outputChange = function(newPlace,el,val){
+			el.find("output")
+		       		.css({
+				 	left: newPlace + 5
+		       		}).text(val);
+		};
+		$('.slider.' + name).bind("taphold",function( event, ui ) {
+            	var el = $(this);
+                var newPlace = 0;
+                var maxx = (max - min)/step;
+                var width = el.width();
+                if (ui.value == step){
+					newPlace = 0;
+				} else {
+					newPlace = ((ui.value-step) * width / maxx);
+				}
+                outputChange(newPlace,el,ui.value);
+            } );
 
         $('.slider.' + name).slider({
             'max': (max - min)/step,
@@ -961,12 +978,34 @@ gnt.questionnaire.create_widgets = function(css_selector) {
             'step': 1,
             'value': (value - min)/step,
             'input_element': this,
+            'start': function( event, ui ) {
+            	var el = $(this);
+                var newPlace = 0;
+                var maxx = (max - min)/step;
+                var width = el.width();
+                if (ui.value == step){
+					newPlace = 0;
+				} else {
+					newPlace = ((ui.value-step) * width / maxx);
+				}
+                outputChange(newPlace,el,ui.value);
+            },
             'change': function(event, ui) {
+            	var el = $(this);
+                var newPlace = 0;
+                var maxx = (max - min)/step;
+                var width = el.width();
+                if (ui.value == step){
+					newPlace = 0;
+				} else {
+					newPlace = ((ui.value-step) * width / maxx);
+				}
+                outputChange(newPlace,el,ui.value);
                 $($(this).slider( "option", "input_element")).attr('value', String(ui.value * step + Number(min)));
                 $($(this).slider( "option", "input_element")).change();
-            }
+		   	}
         });
-
+        
         });
     }
 };

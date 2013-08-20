@@ -937,40 +937,25 @@ gnt.questionnaire.create_widgets = function(css_selector) {
         css_selector = '*'
     }
     //HTML 5 fallback create a slider if no browser support
-    if(!Modernizr.inputtypes.range) {
+    //if(!Modernizr.inputtypes.range) {
+    	
         var range_elements = $(css_selector).find('input[type=range]').each(function() {
-        var min;
-        var max;
-        var step;
-        var value;
-        //hide the range inputs
-        $(this).hide();
-        min = $(this).attr('min');
-        max = $(this).attr('max');
-        step = $(this).attr('step');
-        value = $(this).attr('value');
-        name = $(this).attr('name');
-        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"><output>'+ value +'</output></div>');
-        //the step has to be a integer e.g. step is 1,2,3,4,,, in UI sliders
-
-		var outputChange = function(newPlace,el,val){
-			el.find("output")
-		       		.css({
-				 	left: newPlace + 5
-		       		}).text(val);
-		};
-		$('.slider.' + name).bind("taphold",function( event, ui ) {
-            	var el = $(this);
-                var newPlace = 0;
-                var maxx = (max - min)/step;
-                var width = el.width();
-                if (ui.value == step){
-					newPlace = 0;
-				} else {
-					newPlace = ((ui.value-step) * width / maxx);
-				}
-                outputChange(newPlace,el,ui.value);
-            } );
+	        var min;
+	        var max;
+	        var step;
+	        var value;
+	        //hide the range inputs
+	        $(this).hide();
+	        min = $(this).attr('min');
+	        max = $(this).attr('max');
+	        step = $(this).attr('step');
+	        value = $(this).attr('value');
+	        name = $(this).attr('name');
+	        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"><output>'+ value +'</output></div>');
+	        //the step has to be a integer e.g. step is 1,2,3,4,,, in UI sliders
+			
+		var output = $('.slider.' + name).find('output');
+		output.hide();
 
         $('.slider.' + name).slider({
             'max': (max - min)/step,
@@ -978,35 +963,26 @@ gnt.questionnaire.create_widgets = function(css_selector) {
             'step': 1,
             'value': (value - min)/step,
             'input_element': this,
-            'start': function( event, ui ) {
-            	var el = $(this);
-                var newPlace = 0;
-                var maxx = (max - min)/step;
-                var width = el.width();
-                if (ui.value == step){
-					newPlace = 0;
-				} else {
-					newPlace = ((ui.value-step) * width / maxx);
-				}
-                outputChange(newPlace,el,ui.value);
-            },
-            'change': function(event, ui) {
-            	var el = $(this);
-                var newPlace = 0;
-                var maxx = (max - min)/step;
-                var width = el.width();
-                if (ui.value == step){
-					newPlace = 0;
-				} else {
-					newPlace = ((ui.value-step) * width / maxx);
-				}
-                outputChange(newPlace,el,ui.value);
-                $($(this).slider( "option", "input_element")).attr('value', String(ui.value * step + Number(min)));
-                $($(this).slider( "option", "input_element")).change();
-		   	}
         });
         
+		$('.slider.' + name).mouseenter(function(){
+			output.show();
+		}).mouseleave(function(){
+			output.hide();
+			
+		}).mousemove(function(){
+			var width = $(this).width();
+			var scopePX = width/((max - min)/step);
+			var newPosition = parseInt($(this).find('a').css('left').replace('px',''));
+			var score = newPosition/scopePX;
+				$(this).find("output")
+				       		.css({
+						 	left: ""+(newPosition-20)+"px"
+				       		}).text(score).change();
+		});
+		 
+		 
         });
-    }
+    //}
 };
 

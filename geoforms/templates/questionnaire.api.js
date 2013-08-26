@@ -14,7 +14,7 @@ gnt.questionnaire.popup; //only one popup at the time
 gnt.questionnaire.property_id;
 
 //fix for OpenLayers 2.12 RC5 check 29.5.2012 should be null and automatic
-OpenLayers.Popup.FramedCloud.prototype.maxSize = new OpenLayers.Size(420, 640);
+OpenLayers.Popup.FramedCloud.prototype.maxSize = new OpenLayers.Size(620, 840);
 
 /*
 Draw Button is a drawing
@@ -390,8 +390,9 @@ This function makes the popup and shows it for the feature given.
 Expects there to be a feature.popup created
 that can be called.
 */
-gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons_behave) {
 
+gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons_behave) {
+	
 	if ( feature.popup !== undefined ) {
     
         if( popup_name === undefined ) {
@@ -415,6 +416,8 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
       	gnt.questionnaire.popup = feature.popup;
       	map.addPopup(gnt.questionnaire.popup);
         //map.addPopup(gnt.questionnaire.popup);
+
+		
 
         //add a class to the form to recognize it as active
         $( '.olFramedCloudPopupContent form[name="' + popup_name + '"]' ).addClass( 'active' );
@@ -457,7 +460,7 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
         //Create jQuery sliders and update popup size
         gnt.questionnaire.create_widgets('.popupform.active');
         gnt.questionnaire.popup.updateSize();
-
+        
 		if(buttons_behave == 'noButton'){
 			//connect the event to the infowindow buttons
 	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
@@ -605,7 +608,7 @@ gnt.questionnaire.init = function(forms,
                   	$('#main .span_right').removeClass('bigcontent').addClass('smallcontent');
     				map.updateSize();
                 }
-				updateMapZoom(); 
+		updateMapZoom(); 
             }
         });
 
@@ -925,22 +928,25 @@ gnt.questionnaire.create_widgets = function(css_selector) {
         css_selector = '*'
     }
     //HTML 5 fallback create a slider if no browser support
-    if(!Modernizr.inputtypes.range) {
+    //if(!Modernizr.inputtypes.range) {
+    	
         var range_elements = $(css_selector).find('input[type=range]').each(function() {
-        var min;
-        var max;
-        var step;
-        var value;
-        //hide the range inputs
-        $(this).hide();
-        min = $(this).attr('min');
-        max = $(this).attr('max');
-        step = $(this).attr('step');
-        value = $(this).attr('value');
-        name = $(this).attr('name');
-        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"></div>');
-        //the step has to be a integer e.g. step is 1,2,3,4,,, in UI sliders
-
+	        var min;
+	        var max;
+	        var step;
+	        var value;
+	        //hide the range inputs
+	        $(this).hide();
+	        min = $(this).attr('min');
+	        max = $(this).attr('max');
+	        step = $(this).attr('step');
+	        value = $(this).attr('value');
+	        name = $(this).attr('name');
+	        $(this).after('<div class="slider ' + name + '" data-input="' + name + '"><output>'+ value +'</output></div>');
+	        //the step has to be a integer e.g. step is 1,2,3,4,,, in UI sliders
+			
+		var output = $('.slider.' + name).find('output');
+		output.hide();
 
         $('.slider.' + name).slider({
             'max': (max - min)/step,
@@ -948,13 +954,26 @@ gnt.questionnaire.create_widgets = function(css_selector) {
             'step': 1,
             'value': (value - min)/step,
             'input_element': this,
-            'change': function(event, ui) {
-                $($(this).slider( "option", "input_element")).attr('value', String(ui.value * step + Number(min)));
-                $($(this).slider( "option", "input_element")).change();
-            }
         });
-
+        
+		$('.slider.' + name).mouseenter(function(){
+			output.show();
+		}).mouseleave(function(){
+			output.hide();
+			
+		}).mousemove(function(){
+			var width = $(this).width();
+			var scopePX = width/((max - min)/step);
+			var newPosition = parseInt($(this).find('a').css('left').replace('px',''));
+			var score = newPosition/scopePX;
+				$(this).find("output")
+				       		.css({
+						 	left: ""+(newPosition-20)+"px"
+				       		}).text(score).change();
+		});
+		 
+		 
         });
-    }
+    //}
 };
 

@@ -34,7 +34,7 @@ class GeoformElement(models.Model):
                                     verbose_name = _('element type'))
     html = models.TextField(help_text = render_to_string('help/geoform_element_html.html'),
                             verbose_name = _('html'))
-
+    
     def save(self, *args, **kwargs):
         if self.id is None:
             super(GeoformElement, self).save(*args, **kwargs)

@@ -219,25 +219,17 @@ function updateMapZoom(){
 	var gf = new OpenLayers.Format.GeoJSON(),
 	    source_proj,
 	    target_proj;
-	console.log('1');
 	var questionnaire_area_feature = gf.read( questionnaire.questionnaire_area );
-	console.log('2');
 	// Projection objects for transformations
 	if (questionnaire_area.crs !== undefined) {
-		console.log('3');
 	    source_proj = new OpenLayers.Projection(questionnaire_area.crs.properties.code);
 	}
 	else {
-		console.log('4');
 	    source_proj = new OpenLayers.Projection("EPSG:4326");
 	}
-	console.log('5');
 	target_proj = new OpenLayers.Projection(map.getProjection());
 	// Transform geometry to map projection
-	console.log('6');
 	questionnaire_area_feature[0].geometry.transform(source_proj, target_proj);
-	console.log('bounds:'+questionnaire_area_feature[0].geometry.getBounds());
-	console.log('scale:'+questionnaire_area_feature[0].geometry.getBounds().scale(questionnaire.scale_visible_area));
 	map.zoomToExtent( questionnaire_area_feature[0].geometry.getBounds().scale(questionnaire.scale_visible_area),true );
 }
 
@@ -574,8 +566,6 @@ gnt.questionnaire.init = function(forms,
     //create a session for the anonymoususer
     gnt.auth.create_session();
 	
-	var animation_speed = 0;
-
     if( accordion !== undefined ) {
         var origHash = location.hash.split('#')[1];
         var active_page = 0;
@@ -604,9 +594,6 @@ gnt.questionnaire.init = function(forms,
                 $('#main .span_left').scrollTop(0);
             },
             changestart: function(event, ui) {
-            
-             	
-			    
                 //make content big if no drawbuttons on page
                 if(ui.newHeader.hasClass('bigcontent')) {
                 	//console.log('changing to bigcontent :'+ui.newHeader);
@@ -618,7 +605,7 @@ gnt.questionnaire.init = function(forms,
                   	$('#main .span_right').removeClass('bigcontent').addClass('smallcontent');
     				map.updateSize();
                 }
-				//updateMapZoom(); 
+				updateMapZoom(); 
             }
         });
 

@@ -14,6 +14,14 @@ from geonition_utils.widgets import RangeInput
 from geonition_utils.widgets import Radiobutton
 from geonition_utils.widgets import Checkbox
 
+#class SaveTimestamp(Widget):
+#    
+#    def render(self, name):
+#        input = "<input type='hidden' name='%stime' value='' /><script>" % (name);
+#        script = "$('#%s').on('focusout',new function(){ $('%stime').value=''+new Date().getTime(); });"  %  (name, name)
+#        end = "</script>"
+#        return input + script + end
+    
 #smidgets with basic html
 
 #questionnaire widgets
@@ -23,7 +31,7 @@ class MapLayer(Widget):
         # do we need name? label for hidden field?
         # t = Template('templates/maplayertemplate.html
         # render t.render({'url':question})
-        return "<label>%s</label><script>alert('%s'); </script>" % (name, question)
+        return "<label>%s</label><script> </script>" % (name, question)
 
 class Drawbutton(Widget):
     """

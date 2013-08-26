@@ -38,7 +38,7 @@ class ElementForm(forms.ModelForm):
     This is a base class for input elements
     of the form <label>label <input .../></label>
     """
-    
+    #timestamp = forms.DateTimeField(widget=forms.HiddenInput())
     question = TranslationField(label = _('question'))
     
     def __init__(self, *args, **kwargs):
@@ -70,6 +70,7 @@ class ElementForm(forms.ModelForm):
         model = super(ElementForm, self).save(commit=False)
  
         if self.is_valid():
+            
             name = self.cleaned_data['question'][0].replace(' ', '-')[:200]
                 
             for i, lang in enumerate(settings.LANGUAGES):

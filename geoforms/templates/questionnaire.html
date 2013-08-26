@@ -36,9 +36,10 @@ var MapLayerList = new Array();
             <form name="{{ form.slug }}" method="post" action="#">
                 {% for key, value in elements.items %}
                     {% if key == form.slug %}
+                    	
                         {% for element in value %}
+                        
                         <div class="form_element" data-element-type="{{element.element_type}}">
-                           
                            {% if element.element_type == 'map' %}
 				                                             
                           		<script>
@@ -144,8 +145,8 @@ var MapLayerList = new Array();
 {% block extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/feedback.js"></script>
 {% endblock extra_js %}
-<script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
-<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers-gnt.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers.js"></script>
 <script type="text/javascript" src="{% url 'api_javascript' %}"></script>
 <script type="text/javascript" src="{% url 'map_js' map_slug_name=map_slug %}"></script>
 <script type="text/javascript" charset="utf-8">
@@ -418,7 +419,7 @@ jQuery(document).ready(function() {
 				map_layer_group[x].setVisibility(true);
 				map_controlls_high[x].activate();
 				map_controlls[x].activate();
-				map.zoomToExtent(map_layer_group[x].getDataExtent());
+				//map.zoomToExtent(map_layer_group[x].getDataExtent());
 			} else {
 				map_layer_group[x].setVisibility(false);
 				map_controlls[x].deactivate();
@@ -443,7 +444,7 @@ jQuery(document).ready(function() {
 				map_controlls[x].activate();
 				console.log('x:'+x+' vs: '+temp);
 				console.log(map_layer_group[x]);
-				map.zoomToExtent(map_layer_group[x].getDataExtent());
+				//map.zoomToExtent(map_layer_group[x].getDataExtent());
 			} else {
 				map_layer_group[x].setVisibility(false);
 				map_controlls[x].deactivate();

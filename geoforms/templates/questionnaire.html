@@ -1,6 +1,7 @@
 {% extends "base_map.html" %}
-{% load i18n %}
 {% load url from future %}
+{% load i18n %}
+{% load geoforms_extra %}
 
 {% block stylesheet %}
     <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/questionnaire.css" />
@@ -18,15 +19,18 @@
         </a>
     </li>
     <li class="separator base_bgcolor"></li>
-    <li class="active base_textcolor">
+</ul>
+<div class="application-name base_textcolor">
         <h3>
             {{ questionnaire.name }}
         </h3>
+
     </li>
 </ul>
 <script type="text/javascript" charset="utf-8">
 var MapLayerList = new Array();	
 </script>
+
 <div id="forms">
     {% for form in form_list %}
         <h3 id="page_{{ forloop.counter }}" class="page_{{ forloop.counter }} {% if form.name in bigcontent_forms %}bigcontent{% else %}smallcontent{% endif %}">
@@ -40,6 +44,7 @@ var MapLayerList = new Array();
                         {% for element in value %}
                         
                         <div class="form_element" data-element-type="{{element.element_type}}">
+
                            {% if element.element_type == 'map' %}
 				                                             
                           		<script>
@@ -59,10 +64,14 @@ var MapLayerList = new Array();
 	                           											'name_param': name_param
 	                           										});
 	                           	</script>
-                           {% else %}
-                           		{{ element.html|safe }}
-                           {% endif %}
                            
+                           
+                            {% elif element.element_type == 'checkbox' or element.element_type == 'radio' %}
+                                {{ element.html|randomize_cb_rb:user|safe }}
+                            {% else %}
+                                {{ element.html|safe }}
+                            {% endif %}
+
                         </div>
                         {% endfor %}
                     {% endif %}
@@ -89,13 +98,38 @@ var MapLayerList = new Array();
         </h3>
         <div>
             <div class="form_element">
-                <span class="number_of_features">X</span>
-                <span class="number_of_properties">X</span>
-            </div>
-            <div class="form_element">
+                {% if request.META.HTTP_HOST == "oregonstateparks.maptionnaire.com" %}
+<p>
+Your input is important to us! One more way you can help is to share this survey with your friends, family and any one else who cares about the Columbia River Gorge.
+</p>
+    <div>
+        <div class="g-plusone" data-size="medium" data-annotation="bubble" data-href="http{% if request.is_secure %}s{% endif %}://{{ request.get_host }}{{ request.path }}"></div>
+        <script type="text/javascript">
+          //window.___gcfg = {lang: '{{ LANGUAGE_CODE }}'};
+
+          (function() {
+            var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+            po.src = 'https://apis.google.com/js/plusone.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+          })();
+        </script>
+        <!--[if !IE]> -->
+        <iframe src="https://platform.twitter.com/widgets/tweet_button.html?lang={{ LANGUAGE_CODE }}%26url=https%3A%2F%2F{{ request.get_host }}{{ request.path }}%26counturl=https%3A%2F%2F{{ request.get_host }}%26size=small"
+        style="width: 100px; height:20px; border: 0; overflow: hidden; background-color: transparent;"></iframe>
+        <iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2F{{ request.get_host }}{{ request.path }}&amp;send=false&amp;layout=button_count&amp;width=100&amp;show_faces=false&amp;action=like&amp;colorscheme=light&amp;font=verdana&amp;height=21"
+        style="border:none; overflow:hidden; width: 100px; height:21px; background-color: transparent"></iframe>
+        <!-- <![endif]-->
+    </div>
+    {% else %}
                 <p>
                 {% trans "This is the end of the questionnaire and your answers has been saved. Thank you for your answers! You can still continue modifying your answers by clicking the previous buttons. Quit the questionnaire by clicking the 'quit and go to home page' button." %}
                 </p>
+
+                {% endif %}
+            </div>
+            <div class="form_element">
+                <span class="number_of_features">X</span>
+                <span class="number_of_properties">X</span>
             </div>
             <div class="form_element">
                 <div class="prev_next_controls">
@@ -121,7 +155,11 @@ var MapLayerList = new Array();
                             {% else %}
                             <div class="form_element last">
                             {% endif %}
-                            {{ element.html|safe }}
+                            {% if element.element_type == 'checkbox' or element.element_type == 'radio' %}
+                                {{ element.html|randomize_cb_rb:user|safe }}
+                            {% else %}
+                                {{ element.html|safe }}
+                            {% endif %}
                         </div>
                         {% endfor %}
                     {% endif %}
@@ -144,7 +182,11 @@ var MapLayerList = new Array();
 {% block javascript %}
 {% block extra_js %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/feedback.js"></script>
+{% if request.META.HTTP_HOST == "oregonstateparks.maptionnaire.com" %}
+    <script type="text/javascript" src="{{ STATIC_URL }}js/parks.js"></script>
+{% endif %}
 {% endblock extra_js %}
+
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/proj4js-gnt.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/libs/OpenLayers.js"></script>
 <script type="text/javascript" src="{% url 'api_javascript' %}"></script>
@@ -231,7 +273,10 @@ jQuery(document).ready(function() {
             count_results();
         });
 
-        /* begin WMS element handling */
+        {% if request.META.HTTP_HOST == "oregonstateparks.maptionnaire.com" %}
+        addParks();
+        {% endif %}
+        {% if WMS_ENABLED %}
         gnt.questionnaire.extra_layers = Array();
         $('#map').append(
                 $('<div></div>')
@@ -242,28 +287,29 @@ jQuery(document).ready(function() {
                     .addClass('wms-layerswitcher')
                     )
                 );
-        var sld_getter = make_sld_getter();
+        //var sld_getter = make_sld_getter();
         $('[data-element-type="wms-layer"]').each(function() {
             var name = $(this).children().first().attr('data-layer-name');
             var long_name = $(this).children().first().attr('data-layer-long-name');
             var url = $(this).children().first().attr('data-layer-url');
             var page = parseInt($(this).closest('[data-page]').attr('data-page'));
             var layer = new OpenLayers.Layer.WMS(
-                "extra_layer", 
-                url, 
+                "extra_layer",
+                url,
                 {
                     "layers": name,
                     "transparent": true,
-                    "version": "1.1.1",
-                    "SLD_BODY": sld_getter(name)
+                    "version": "1.1.1"/*,
+                    "SLD_BODY": sld_getter(name)*/
                 });
-                                                          
+
             gnt.questionnaire.extra_layers.push({
                 page_number : page,
                 long_name : long_name,
                 layer : layer
                 });
             map.addLayer(layer);
+
             
         /* end WMS element handling */
         });
@@ -450,10 +496,13 @@ jQuery(document).ready(function() {
                 console.log('selectcontrol.deactivate()');
 			}
 		}
+
     });
 });
 
 {% endblock questionnaire_init %}
+
+{% if WMS_ENABLED %}
 function accordionPageChangeHandler(event) {
     makeWMSLayerSwitcher(event.page);
 }
@@ -475,7 +524,7 @@ function makeWMSLayerSwitcher(page_number) {
         else {
             layer.layer.setVisibility(true);
             page_has_wms_layers = true;
-            
+
             $('#wms-layerswitcher-container ul').append(
                     $('<li></li>')
                     .append($('<input type="checkbox">')
@@ -491,6 +540,7 @@ function makeWMSLayerSwitcher(page_number) {
         $('#wms-layerswitcher-container').hide();
     }
 }
+{% endif %}
 
 
 </script>

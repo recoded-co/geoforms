@@ -8,19 +8,41 @@
 
 {% block content %}
 
-<div class="feature_comments">
+<div class="feature_comments analysis_popup">
     {% trans "Touch a feature with your mouse to see the comments!" %}
 </div>
+<div class="user_info analysis_popup">
+</div>
     
-<p>
+<p style="padding-left: 10px">
 {% trans "Features originating from the same drawbutton are colored alike. Touch them with your mouse to see the comments! Filtering on long answers is not supported." %}
 </p>
+
+<div id="property-ctrl">
+    <div class="property-ctrl-general" style="margin-bottom:7px">
+        <form class="property-ctrl-andor">
+            <span><strong>Apply filters as:</strong></span>
+                <label><input type="radio" name="andor" value="and">AND</label>
+                <label><input type="radio" name="andor" value="or">OR</label>
+        </form>
+    </div>
+<ul class="property-ctrl-main">
+</ul>
+</div>
+<div id="feature-ctrl">
+<form class="feature-ctrl-andor">
+    <span><strong>Apply attribute filters as:</strong></span>
+        <label><input type="radio" name="andor" value="and">AND</label>
+        <label><input type="radio" name="andor" value="or">OR</label>
+</form>
+</div>
+{% comment %}
 <div class="instructions">
     <p><strong>Instructions for attribute selection</strong></p>
     <p>
     Assume your multiple-choice question had four options: w, x, y, and z. If x and y were checked above, it could have two distinct meanings: 
     </p>
-    <ul style="list-style:none;margin-left: 38px">
+    <ul style="margin-left: 10px">
         <li>A) answers that include x or y ( {x}, {x,y}, {y,z}, {x,y,w}, ...)</li>
         <li>B) answers that include neither w nor z ( {x}, {y}, {x,y} )</li>
     </ul>
@@ -32,6 +54,7 @@
     For more detailed analysis you may use e.g. <a href="http://qgis.org/" target="_new">QuatumGIS</a>.
     </p>
 </div>
+{% endcomment %}
 {% endblock content %}
 
 

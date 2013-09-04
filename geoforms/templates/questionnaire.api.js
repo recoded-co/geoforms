@@ -12,6 +12,7 @@ gnt.questionnaire.npvalues = {};
 
 gnt.questionnaire.popup; //only one popup at the time
 gnt.questionnaire.property_id;
+gnt.questionnaire.is_mobile_user = false;
 
 //fix for OpenLayers 2.12 RC5 check 29.5.2012 should be null and automatic
 OpenLayers.Popup.FramedCloud.prototype.maxSize = new OpenLayers.Size(620, 840);
@@ -352,6 +353,12 @@ gnt.questionnaire.save_handler = function(evt) {
         gnt.questionnaire.popup = undefined;
     }
 
+    $('#mobile-popup').remove();
+    if (gnt.questionnaire.is_mobile_user){
+        $('body').removeClass('main map settings');
+        $('body').addClass('main');
+    }
+
 }
 
 /*
@@ -382,6 +389,7 @@ gnt.questionnaire.remove_handler = function(evt) {
         map.removePopup( gnt.questionnaire.popup );
         gnt.questionnaire.popup = undefined;
     }
+    $('#mobile-popup').remove();
 }
 
 /*
@@ -412,15 +420,25 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
         }
         
         //create popup and put it on the map
-      	
-      	gnt.questionnaire.popup = feature.popup;
-      	map.addPopup(gnt.questionnaire.popup);
-        //map.addPopup(gnt.questionnaire.popup);
-
-		
-
-        //add a class to the form to recognize it as active
-        $( '.olFramedCloudPopupContent form[name="' + popup_name + '"]' ).addClass( 'active' );
+        gnt.questionnaire.popup = feature.popup;
+        if (gnt.questionnaire.is_mobile_user) {
+            $('body').append(
+                $('<div></div>')
+                .attr('id','mobile-popup')
+                .css('background','white')
+                .html(feature.data.contentHTML)
+                );
+            $('#mobile-popup').dialog({
+                modal: true
+            });
+            $('.ui-dialog').addClass('form_element');
+            $('#mobile-popup form[name="' + popup_name + '"]' ).addClass( 'active' );
+            $('.ui-dialog-titlebar').css('display','none');
+            $('#mobile-popup .popupform').css('max-height',window.innerHeight - 60);
+        } else {
+            map.addPopup(gnt.questionnaire.popup);
+            $( '.olFramedCloudPopupContent form[name="' + popup_name + '"]' ).addClass( 'active' );
+        }
 
 
         // add values to the form the values are connected but the form element name
@@ -445,10 +463,14 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
                     //this shuold be done for all kinds of multiple value inputs
                     if($(this).attr('type') === 'checkbox' &&
                        $(this).attr('value') === val_obj.value) { //check checkboxes
-
                         $(this).attr( 'checked', true);
                         return value;
                     } else if($(this).attr( 'type' ) === 'checkbox') {
+                    } else if($(this).attr( 'type' ) === 'radio' &&
+                       $(this).attr('value') === val_obj.value) { //check radiobuttons
+                        $(this).prop( 'checked', true);
+                        return value;
+                    } else if($(this).attr( 'type' ) === 'radio') {
                     } else {
                         return val_obj.value;
                     }
@@ -459,19 +481,18 @@ gnt.questionnaire.show_popup_for_feature = function(feature, popup_name, buttons
 
         //Create jQuery sliders and update popup size
         gnt.questionnaire.create_widgets('.popupform.active');
-        gnt.questionnaire.popup.updateSize();
-        
-		if(buttons_behave == 'noButton'){
-			//connect the event to the infowindow buttons
-	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
-	                                                               gnt.questionnaire.save_handler);
-		} else {
-	        //connect the event to the infowindow buttons
-	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
-	                                                               gnt.questionnaire.save_handler);
-	        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.remove').click([feature],
-	                                                            gnt.questionnaire.remove_handler);
-	    }
+
+        if (!gnt.questionnaire.is_mobile_user) {
+            gnt.questionnaire.popup.updateSize();
+        }
+
+        //connect the event to the infowindow buttons
+        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button').off();
+        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.save').click([feature],
+                                                               gnt.questionnaire.save_handler);
+        $('form[name="' + popup_name + '"] + div.popup_feature_buttons button.remove').click([feature],
+                                                                 gnt.questionnaire.remove_handler);
+
         return true;
 
     } else {
@@ -568,7 +589,13 @@ gnt.questionnaire.init = function(forms,
 
     //create a session for the anonymoususer
     gnt.auth.create_session();
-	
+
+
+
+    gnt.questionnaire.is_mobile_user = window.innerWidth < 770 ? true : false;
+
+
+
     if( accordion !== undefined ) {
         var origHash = location.hash.split('#')[1];
         var active_page = 0;
@@ -672,6 +699,12 @@ gnt.questionnaire.init = function(forms,
                            'complete': function() {
                                 //bind on value change to save the values
                                 $(forms + ' :input:not(button)').change(function(evt) {
+                                    if (gnt.questionnaire.wait_time === undefined){
+                                        gnt.questionnaire.wait_time = 5000;
+                                    } else {
+                                        gnt.questionnaire.wait_time = 0;
+                                    }
+                                    setTimeout(function(){
                                     var new_value = evt.currentTarget.value;
                                     if(evt.currentTarget.type === 'checkbox') {
                                         new_value = [];
@@ -702,6 +735,7 @@ gnt.questionnaire.init = function(forms,
                                                                 '@null',
                                                                 property);
                                     }
+                                    }, gnt.questionnaire.wait_time);
                                 });
                             }});
 

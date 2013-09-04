@@ -33,6 +33,11 @@ class MapLayer(Widget):
         # render t.render({'url':question})
         return "<label>%s</label><script> </script>" % (name, question)
 
+    def render(self, name, html):
+        # do we need name? label for hidden field?
+        return "<script> map.add_gml('%s'); </script>" % (html)
+
+
 class Drawbutton(Widget):
     """
     This is a html button

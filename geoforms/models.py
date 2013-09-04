@@ -52,6 +52,18 @@ class GeoformElement(models.Model):
         verbose_name_plural = _('questionnaire page elements')
 
 #proxy models for geoformelement
+class MapLayerModel(GeoformElement):
+
+    def save(self, *args, **kwargs):
+        self.element_type = 'map'
+        super(MapLayerModel, self).save(*args, **kwargs)
+
+    class Meta:
+        proxy = True
+        verbose_name = _('map layer')
+        verbose_name_plural = _('map layers')
+
+
 class TextElementModel(GeoformElement):
     """
     This is a proxy model to handle text inputs

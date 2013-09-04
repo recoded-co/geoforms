@@ -17,6 +17,7 @@ from geoforms.forms import TextareaForm
 from geoforms.forms import TextElementForm
 from geoforms.forms import QuestionForm
 from geoforms.forms import RangeElementForm
+from geoforms.forms import MapLayerForm
 from geoforms.models import CheckboxElementModel
 from geoforms.models import DrawbuttonElementModel
 from geoforms.models import GeoformElement
@@ -31,6 +32,7 @@ from geoforms.models import TextareaModel
 from geoforms.models import RangeElementModel
 from geoforms.models import PopupModel
 from geoforms.models import PageModel
+from geoforms.models import MapLayerModel
 from modeltranslation.admin import TranslationAdmin
 from modeltranslation.admin import TranslationTabularInline
 
@@ -341,4 +343,14 @@ class RadioElementAdmin(GeoformElementAdmin):
 admin.site.register(RadioElementModel, RadioElementAdmin)
 
 
+
+
+
+class MapLayerAdmin(admin.ModelAdmin):
+    form = MapLayerForm
+    
+    def queryset(self, request):
+        return self.model.objects.filter(element_type = 'map')
+
+admin.site.register(MapLayerModel, MapLayerAdmin)    
 
